@@ -1552,17 +1552,36 @@ function drawDistChart(c, zMark) {
     }
 }
 
-/* shareable links: everything lives in the url hash */
+/* shareable links: the url hash holds only what differs from the defaults,
+   e.g. #shoes&z=2 or #H0=70&Om=0.25. Planck 2018 at z = 1 leaves the url bare. */
+function presetDiff(p, key) {
+    const full = { ...PRESET_DEFAULTS, ...PRESETS[key] }, d = [];
+    for (const id of PARAM_IDS) {
+        if (id === 'Ode' && p.flat) continue;
+        if (!(Math.abs(full[id] - p[id]) < 1e-9)) d.push([id, p[id]]);
+    }
+    if (!!full.flat !== p.flat) d.push(['flat', p.flat ? 1 : 0]);
+    return d;
+}
 function writeHash(p, kind, val) {
-    const q = new URLSearchParams();
-    for (const id of PARAM_IDS) if (!(p.flat && id === 'Ode')) q.set(id, p[id]);
-    q.set('flat', p.flat ? 1 : 0);
-    q.set(kind, val);
-    try { history.replaceState(null, '', '#' + q.toString()); } catch {}
+    // describe the model as the closest preset plus whatever was changed
+    let base = 'planck18', diff = presetDiff(p, base);
+    for (const k of Object.keys(PRESETS)) {
+        if (k === 'custom') continue;
+        const d = presetDiff(p, k);
+        if (d.length < diff.length) { base = k; diff = d; }
+    }
+    const parts = base === 'planck18' ? [] : [base];
+    for (const [id, v] of diff) parts.push(id + '=' + v);
+    if (!(kind === 'z' && val === 1)) parts.push(kind + '=' + +val.toPrecision(10));
+    const url = location.pathname + location.search + (parts.length ? '#' + parts.join('&') : '');
+    try { history.replaceState(null, '', url); } catch {}
 }
 function readHash() {
-    if (location.hash.length < 3 || !location.hash.includes('=')) return;
+    if (location.hash.length < 2) return;
     const q = new URLSearchParams(location.hash.slice(1));
+    // older links spell out every parameter, so they still land in the same place
+    applyPreset([...q.keys()].find(k => k in PRESETS && k !== 'custom') || 'planck18');
     for (const id of PARAM_IDS) if (q.has(id) && Number.isFinite(+q.get(id))) $('#' + id).value = q.get(id);
     if (q.has('flat')) $('#flat').checked = q.get('flat') === '1';
     for (const o of $('#solve-kind').options) if (q.has(o.value)) { $('#solve-kind').value = o.value; $('#solve-val').value = q.get(o.value); }
@@ -2422,7 +2441,7 @@ unitSel.addEventListener('change', () => {
 });
 readHash();
 if (unitSys !== 'cosmo') { convertInputs('cosmo', unitSys); relabelUnits(); }
-if (!location.hash.includes('=')) presetSel.value = 'planck18';
+if (location.hash.length < 2) presetSel.value = 'planck18';
 computeCalc();
 $('#hc-H0').value = num('H0');
 updateHubbleConv(false);
