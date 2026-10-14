@@ -4,7 +4,7 @@ Distances, ages and the CMB, to more significant figures than the data justify.
 
 A cosmology calculator plus a few other tools you end up needing anyway. It's a single HTML file with no dependencies and no build step, and it runs entirely in your browser. Nothing gets sent anywhere.
 
-**[Open it](https://YOUR-USERNAME.github.io/CosmologyToolbox/)**, or download `index.html` and double-click it. It works offline, which is handy for observing runs.
+**[Open it](https://allangabrielsch.github.io/CosmologyToolbox/)**, or download `index.html` and double-click it. It works offline, which is handy for observing runs.
 
 ## What's in it
 
