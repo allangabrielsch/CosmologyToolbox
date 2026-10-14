@@ -1,0 +1,2444 @@
+<!DOCTYPE html>
+<!--
+    cosmology toolbox
+    one html file. no build step, no dependencies, no tracking.
+    all numbers computed in your browser. errors are your own (and possibly mine)
+-->
+<!--
+    ===== EASTER EGG LIST (for me, because i keep forgetting) =====
+    spoilers below. referee #2 at the bottom of the page drops hints for most of these.
+
+     1. hubble tension       set H0 to an early-universe value (67.36, 67.4, 67.66, 68.52 ...) or a
+                             late-universe value (73.04, 73.3, 73.9 ...) -> team remark. 70 = diplomatic, 69.8 = trgb
+     2. hubble 1929          H0 = 500 (or the preset)                           -> universe younger than the earth
+     3. 42                   H0 = 42 or z = 42                                   -> douglas adams
+     4. no big bang          e.g. Om = 0.3, OL = 2, not flat                     -> bounce universe
+     5. big crunch           closed + recollapsing (Om = 3, OL = 0)              -> crunch
+     6. big rip              w0 < -1 (wa = 0)                                    -> countdown in results
+     7. steady state         Om = 0, OL = 1, T_CMB = 0, not flat                 -> fred hoyle approves
+     8. einstein-de sitter / milne presets                                       -> remarks
+     9. last scattering      z >= 1089 in calculator                             -> "computing distances to a wall"
+    10. andromeda            negative z (~ -0.001) in redshift tool              -> eta 4.5 gyr
+    11. kessel run           12 parsecs in the unit converter                    -> unit of distance, not time
+    12. cmb seeds            "hawking" (initials), "coldspot", "pigeon", "axis of evil"
+    13. cobe beam            choose the 7 degree beam                            -> blobs
+    14. konami code          up up down down left right left right b a           -> inflation
+    15. wow! signal          type 6EQUJ5 anywhere (not in a text box)            -> wow
+    16. heat death           leave the page alone for 2 minutes                  -> everything turns grey
+    17. tab title            switch tabs                                         -> redshifting away
+    18. supernova            every few minutes a star brightens in the margins. click it
+    19. olbers' switch       the dark-mode button                                -> paradox resolved
+    20. console              f12
+    21. unit systems         american (handegg fields, big macs, drive-thru waits, °F) and star wars (kessel runs,
+                             wookiees, death stars) each come with a remark. so do the others
+    22. shooting stars       every ~35-85 s, or press "wish upon a star" in the footer. catch one -> hint for an
+                             egg you haven't found yet, "tell me plainly" -> the obvious version
+
+    not hinted anywhere: footer pie chart, 404 page (beyond the particle horizon)
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmology Toolbox</title>
+    <meta name="description" content="Cosmological distances, ages, H0 and the Hubble tension, a CMB sky simulator, redshifts, units and constants. Runs in your browser.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Cosmology Toolbox">
+    <meta property="og:description" content="Distances, ages, H₀, the CMB, and more significant figures than the data justify.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%230a1024'/%3E%3Cellipse cx='16' cy='16' rx='12' ry='4.5' fill='none' stroke='%23e9c87a' stroke-width='1.6' transform='rotate(-25 16 16)'/%3E%3Ccircle cx='16' cy='16' r='3.2' fill='%23f3efe2'/%3E%3C/svg%3E">
+
+    <!-- remember the theme before first paint -->
+    <script>
+        try { const t = localStorage.getItem('cosmo-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
+    </script>
+
+    <style>
+        /* ---------- tokens. light = beige workstation, dark = the same workstation after midnight ---------- */
+        :root {
+            --sans: 'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', sans-serif;
+            --mono: 'DejaVu Sans Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+            --serif: 'Latin Modern Roman', 'CMU Serif', 'Computer Modern Serif', Georgia, 'Times New Roman', serif;
+
+            --sky: #070b1a;
+            --page-text: #e9e6dc;
+            --page-muted: #a7a8bf;
+            --page-link: #9cc2f0;
+
+            --win: #d6d2c4;
+            --win-text: #1d1d1b;
+            --muted: #55534c;
+            --bevel-hi: #f4f2ea;
+            --bevel-lo: #8a867b;
+            --bevel-dark: #3b3a35;
+            --title-bg: #4a5d73;
+            --title-text: #f1efe8;
+            --well: #fcfcfb;
+            --well-text: #0b0b0b;
+            --accent: #8c2f24;
+            --link: #1f4f8f;
+            --grid: #e6e4dd;
+            --axis: #8a877e;
+            --s1: #2a78d6;
+            --s2: #eb6834;
+            --s3: #1baf7a;
+            --warn-bg: #f6e7c8;
+            color-scheme: light;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --win: #2a2c31; --win-text: #e6e4dc; --muted: #a9a69c;
+                --bevel-hi: #4a4d55; --bevel-lo: #15161a; --bevel-dark: #000;
+                --title-bg: #33465c; --title-text: #e9e7df;
+                --well: #1a1a19; --well-text: #f0efec;
+                --accent: #e08a7a; --link: #8fb4ea;
+                --grid: #2e2e2c; --axis: #8a877e;
+                --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+                --warn-bg: #3a3222;
+                color-scheme: dark;
+            }
+        }
+        :root[data-theme="dark"] {
+            --win: #2a2c31; --win-text: #e6e4dc; --muted: #a9a69c;
+            --bevel-hi: #4a4d55; --bevel-lo: #15161a; --bevel-dark: #000;
+            --title-bg: #33465c; --title-text: #e9e7df;
+            --well: #1a1a19; --well-text: #f0efec;
+            --accent: #e08a7a; --link: #8fb4ea;
+            --grid: #2e2e2c; --axis: #8a877e;
+            --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+            --warn-bg: #3a3222;
+            color-scheme: dark;
+        }
+
+        * { box-sizing: border-box; }
+        html, body { margin: 0; }
+        body {
+            min-height: 100vh;
+            padding: 0 16px 48px;
+            background: var(--sky) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Ccircle cx='14' cy='22' r='0.8' fill='%23fff' opacity='.75'/%3E%3Ccircle cx='71' cy='9' r='0.6' fill='%23fff' opacity='.5'/%3E%3Ccircle cx='131' cy='37' r='1' fill='%23fff' opacity='.8'/%3E%3Ccircle cx='42' cy='81' r='0.6' fill='%23cfd8ff' opacity='.6'/%3E%3Ccircle cx='103' cy='96' r='0.8' fill='%23fff' opacity='.55'/%3E%3Ccircle cx='160' cy='121' r='0.6' fill='%23ffe9c9' opacity='.6'/%3E%3Ccircle cx='23' cy='149' r='0.9' fill='%23fff' opacity='.7'/%3E%3Ccircle cx='86' cy='162' r='0.5' fill='%23fff' opacity='.45'/%3E%3Ccircle cx='150' cy='170' r='0.7' fill='%23fff' opacity='.5'/%3E%3C/svg%3E") repeat;
+            color: var(--page-text);
+            font: 15px/1.5 var(--sans);
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='233' height='233'%3E%3Ccircle cx='31' cy='57' r='1.1' fill='%23fff'/%3E%3Ccircle cx='190' cy='24' r='0.9' fill='%23dfe6ff'/%3E%3Ccircle cx='120' cy='140' r='1.2' fill='%23fff'/%3E%3Ccircle cx='60' cy='205' r='0.8' fill='%23ffeedd'/%3E%3Ccircle cx='211' cy='180' r='1' fill='%23fff'/%3E%3C/svg%3E");
+            animation: twinkle 3.2s ease-in-out infinite alternate;
+            transition: opacity 30s;
+        }
+        @keyframes twinkle { from { opacity: 0.25; } to { opacity: 0.9; } }
+
+        a { color: var(--page-link); }
+        main { max-width: 900px; margin: 0 auto; transition: filter 1.2s; transform-origin: 50% 0; }
+
+        /* ---------- header ---------- */
+        header { text-align: center; padding: 34px 0 10px; }
+        h1 {
+            margin: 0;
+            font: 400 clamp(2.1rem, 7vw, 3.3rem)/1.1 var(--serif);
+            letter-spacing: 0.01em;
+            color: #f3efe2;
+        }
+        h1 .lam { color: #e9c87a; }
+        .tagline { margin: 8px 0 0; font: italic 1.05rem var(--serif); color: var(--page-muted); }
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 4px 14px;
+            margin: 18px 0 24px;
+            font-size: 14px;
+        }
+        nav a { color: var(--page-text); text-decoration: none; border-bottom: 1px dotted var(--page-muted); }
+        nav a:hover { color: #fff; border-bottom-style: solid; }
+        .unit-pick { display: inline-flex; align-items: center; gap: 6px; color: var(--page-muted); }
+        .unit-pick select { width: auto; max-width: 62vw; min-height: 30px; padding: 2px 6px; font: 13px var(--sans); }
+
+        /* ---------- workstation windows ---------- */
+        .win {
+            margin: 0 0 26px;
+            background: var(--win);
+            color: var(--win-text);
+            border: 2px solid;
+            border-color: var(--bevel-hi) var(--bevel-dark) var(--bevel-dark) var(--bevel-hi);
+            box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.45);
+            scroll-margin-top: 12px;
+        }
+        .titlebar {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 10px;
+            padding: 5px 10px;
+            background: var(--title-bg);
+            color: var(--title-text);
+            font: 600 14px var(--sans);
+        }
+        .titlebar .path { font: 12px var(--mono); opacity: 0.75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .win-body { padding: 16px; }
+        .statusbar {
+            display: flex;
+            gap: 2px;
+            padding: 2px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .statusbar span {
+            flex: 1 1 auto;
+            min-width: 0;
+            padding: 2px 8px;
+            border: 1px solid;
+            border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .statusbar span.fixed { flex: 0 0 auto; }
+
+        h2 { margin: 0 0 10px; font: 600 15px var(--sans); }
+        h3 { margin: 18px 0 8px; font: 600 13px var(--sans); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+        h3:first-child { margin-top: 0; }
+        p { margin: 0 0 10px; }
+        .win a { color: var(--link); }
+        .small { font-size: 12.5px; color: var(--muted); }
+        .note { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+        sub, sup { line-height: 0; }
+
+        /* ---------- form bits ---------- */
+        .fields {
+            display: grid;
+            grid-template-columns: max-content minmax(0, 1fr);
+            gap: 6px 10px;
+            align-items: center;
+            align-content: start;
+        }
+        .fields label { font-size: 13.5px; }
+        .fields .span { grid-column: 1 / -1; }
+        input[type="number"], input[type="text"], select, textarea {
+            width: 100%;
+            min-height: 32px;
+            padding: 4px 7px;
+            font: 14px var(--mono);
+            color: var(--well-text);
+            background: var(--well);
+            border: 2px solid;
+            border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+            border-radius: 0;
+        }
+        select { font-family: var(--sans); }
+        textarea { min-height: 150px; resize: vertical; line-height: 1.45; }
+        input:disabled { opacity: 0.65; }
+        input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--s1); outline-offset: 0; }
+        input[type="range"] { width: 100%; accent-color: var(--title-bg); }
+        .check { display: flex; align-items: center; gap: 6px; font-size: 13.5px; }
+        .check input { width: 16px; height: 16px; margin: 0; accent-color: var(--title-bg); }
+
+        .btn {
+            min-height: 32px;
+            padding: 5px 14px;
+            font: 600 13.5px var(--sans);
+            color: var(--win-text);
+            background: var(--win);
+            border: 2px solid;
+            border-color: var(--bevel-hi) var(--bevel-dark) var(--bevel-dark) var(--bevel-hi);
+            box-shadow: inset -1px -1px 0 var(--bevel-lo);
+            cursor: pointer;
+        }
+        .btn:active { border-color: var(--bevel-dark) var(--bevel-hi) var(--bevel-hi) var(--bevel-dark); box-shadow: inset 1px 1px 0 var(--bevel-lo); }
+        .btn:focus-visible { outline: 1px dotted var(--win-text); outline-offset: -5px; }
+        .btn.primary { background: var(--title-bg); color: var(--title-text); }
+        .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .row > * { flex: 0 0 auto; }
+
+        .cols { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 18px; }
+        .cols.even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+        @media (max-width: 780px) {
+            .cols, .cols.even { grid-template-columns: minmax(0, 1fr); }
+        }
+
+        /* ---------- results tables ---------- */
+        .table-wrap { container-type: inline-size; overflow-x: auto; background: var(--well); border: 2px solid; border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo); }
+        table.res { width: 100%; border-collapse: collapse; color: var(--well-text); font-size: 13.5px; }
+        table.res th, table.res td { padding: 4px 9px; text-align: left; vertical-align: baseline; border-bottom: 1px solid var(--grid); }
+        table.res th { font-weight: 400; }
+        table.res td.v { font: 13.5px var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+        table.res td.alt { font: 12.5px var(--mono); color: var(--muted); min-width: 9em; }
+        table.res tr.sec td {
+            padding-top: 10px;
+            font: 600 11.5px var(--sans);
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: var(--muted);
+            border-bottom: 1px solid var(--axis);
+        }
+        table.res tr.hl td, table.res tr.hl th { background: var(--warn-bg); }
+        /* narrow tables: the third column tucks in under the value instead of falling off the edge */
+        @container (max-width: 480px) {
+            table.res, table.res tbody { display: block; }
+            table.res tr { display: grid; grid-template-columns: minmax(0, 42%) minmax(0, 1fr); border-bottom: 1px solid var(--grid); }
+            table.res th, table.res td { border-bottom: 0; }
+            table.res td.v { white-space: normal; overflow-wrap: anywhere; }
+            table.res td.alt { grid-column: 2; padding-top: 0; white-space: normal; overflow-wrap: anywhere; }
+            table.res td.alt:empty { display: none; }
+            table.res tr.sec td { grid-column: 1 / -1; }
+        }
+        table.res tr.click { cursor: copy; }
+        table.res tr.click:hover th, table.res tr.click:hover td { background: var(--grid); }
+        .warnbox {
+            margin: 0 0 12px;
+            padding: 8px 10px;
+            background: var(--warn-bg);
+            color: var(--well-text);
+            border-left: 4px solid var(--accent);
+            font-size: 13.5px;
+        }
+        .warnbox:empty { display: none; }
+
+        .chip {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 0 6px;
+            font: 600 11px/18px var(--sans);
+            color: var(--win-text);
+            border: 1px solid var(--axis);
+            border-left: 4px solid var(--axis);
+            background: var(--well);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .chip.early { border-left-color: var(--s1); }
+        .chip.late { border-left-color: var(--s2); }
+        .chip.mid { border-left-color: var(--s3); }
+        .chip:empty { display: none; }
+
+        /* ---------- charts ---------- */
+        .chart-box { position: relative; margin-top: 12px; background: var(--well); border: 2px solid; border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo); padding: 8px 6px 2px; }
+        .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 0 6px 4px; font-size: 12.5px; color: var(--well-text); }
+        .legend i { display: inline-block; width: 16px; height: 0; margin-right: 6px; vertical-align: middle; border-top: 2px solid; }
+        .legend i.dot { width: 8px; height: 8px; border: 0; border-radius: 50%; }
+        .legend i.dash { border-top-style: dashed; }
+        .chart { position: relative; width: 100%; }
+        .chart svg { display: block; overflow: visible; }
+        .chart text { fill: var(--muted); font: 11.5px var(--sans); }
+        .chart .lbl { fill: var(--well-text); font-weight: 600; }
+        .chart .gridline { stroke: var(--grid); stroke-width: 1; }
+        .chart .axisline { stroke: var(--axis); stroke-width: 1; }
+        .chart .cross { stroke: var(--axis); stroke-width: 1; stroke-dasharray: 3 3; }
+        .tip {
+            position: absolute;
+            z-index: 3;
+            pointer-events: none;
+            min-width: 140px;
+            padding: 6px 9px;
+            background: var(--well);
+            color: var(--well-text);
+            border: 1px solid var(--axis);
+            box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.25);
+            font: 12px/1.45 var(--sans);
+            white-space: nowrap;
+        }
+        .tip b { font-weight: 600; }
+        .tip .sw { display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; }
+        .tip .num { font-family: var(--mono); }
+
+        /* ---------- cmb ---------- */
+        .cmb-wrap { display: grid; grid-template-columns: minmax(0, 460px) minmax(0, 1fr); gap: 18px; align-items: start; }
+        @media (max-width: 820px) { .cmb-wrap { grid-template-columns: minmax(0, 1fr); } }
+        #cmb-canvas {
+            display: block;
+            width: 100%;
+            max-width: 460px;
+            aspect-ratio: 1;
+            background: #111;
+            border: 2px solid;
+            border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo);
+            cursor: crosshair;
+        }
+        #cmb-bar { display: block; width: 100%; max-width: 460px; height: 12px; margin-top: 6px; }
+        .bar-labels { display: flex; justify-content: space-between; max-width: 460px; font: 12px var(--mono); color: var(--muted); }
+
+        /* ---------- toast (where the remarks go) ---------- */
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 16px;
+            z-index: 100;
+            width: max-content;
+            max-width: min(560px, calc(100% - 32px));
+            padding: 10px 38px 10px 12px;
+            background: var(--win);
+            color: var(--win-text);
+            border: 2px solid;
+            border-color: var(--bevel-hi) var(--bevel-dark) var(--bevel-dark) var(--bevel-hi);
+            box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.5);
+            font-size: 14px;
+            transform: translate(-50%, 140%);
+            opacity: 0;
+            transition: transform 260ms ease, opacity 260ms ease;
+        }
+        .toast.show { transform: translate(-50%, 0); opacity: 1; }
+        .toast b.k { display: block; margin-bottom: 2px; font-size: 11.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--accent); }
+        .toast a { color: var(--link); }
+        .toast .x {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            background: none;
+            border: 0;
+            color: var(--muted);
+            font: 18px/1 var(--sans);
+            cursor: pointer;
+        }
+
+        /* ---------- referee report ---------- */
+        .report { font: 14px/1.55 var(--mono); white-space: pre-wrap; background: var(--well); color: var(--well-text); padding: 12px 14px; border: 2px solid; border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo); min-height: 6.5em; }
+
+        footer { text-align: center; color: var(--page-muted); font-size: 13px; line-height: 1.7; margin-top: 8px; }
+        footer .pie { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
+        /* ---------- transients and other nonsense ---------- */
+        .sn {
+            position: fixed;
+            z-index: 20;
+            width: 40px;
+            height: 40px;
+            margin: -20px 0 0 -20px;
+            padding: 0;
+            background: none;
+            border: 0;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .sn::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 4px;
+            height: 4px;
+            margin: -2px 0 0 -2px;
+            border-radius: 50%;
+            background: #fff8e6;
+            box-shadow: 0 0 6px 2px rgba(255, 245, 220, 0.9), 0 0 16px 6px rgba(160, 200, 255, 0.35);
+            animation: sn 26s ease-in-out forwards;
+        }
+        @keyframes sn {
+            0% { transform: scale(0.2); opacity: 0; }
+            12% { transform: scale(1.7); opacity: 1; }
+            60% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(0.2); opacity: 0; }
+        }
+        /* shooting stars. catch one for a hint */
+        .shoot {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 30;
+            width: 56px;
+            height: 56px;
+            margin: -28px 0 0 -28px;
+            padding: 0;
+            background: none;
+            border: 0;
+            cursor: pointer;
+        }
+        .shoot .tail {
+            position: absolute;
+            right: 28px;
+            top: 27px;
+            width: 110px;
+            height: 2px;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(235, 240, 255, 0.95));
+            border-radius: 2px;
+        }
+        .shoot .head {
+            position: absolute;
+            left: 25px;
+            top: 25px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #fffbea;
+            box-shadow: 0 0 8px 2px rgba(255, 250, 225, 0.9);
+        }
+        .shoot:focus-visible { outline: 1px dotted #fff; }
+        .toast .more { margin-top: 6px; padding: 0; background: none; border: 0; color: var(--link); font: inherit; text-decoration: underline; cursor: pointer; }
+        footer .wish { margin-top: 8px; }
+        .inflating { animation: inflate 1.8s cubic-bezier(.2, .9, .2, 1); }
+        @keyframes inflate {
+            0% { transform: scale(1); }
+            30% { transform: scale(2.6); filter: blur(3px); opacity: 0.25; }
+            31% { transform: scale(0.96); filter: none; opacity: 0.2; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .heat main { filter: grayscale(1) contrast(0.3) brightness(0.85); transition: filter 45s linear; }
+        .heat body::before { opacity: 0 !important; animation: none; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+        }
+        .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    </style>
+</head>
+<body>
+<main id="main">
+    <header>
+        <h1>Cosmology Toolbox<span class="lam">.</span></h1>
+        <p class="tagline">Distances, ages and the CMB, to more significant figures than the data justify.</p>
+        <nav aria-label="Sections">
+            <a href="#calc">Calculator</a>
+            <a href="#lensing">Lensing</a>
+            <a href="#hubble">H₀ &amp; tension</a>
+            <a href="#cmb">CMB</a>
+            <a href="#redshift">Redshift</a>
+            <a href="#units">Units</a>
+            <a href="#constants">Constants</a>
+            <label class="unit-pick">Unit system <select id="unitsys"></select></label>
+            <button id="olbers" class="btn" type="button" title="Toggle dark mode">Why is the sky dark?</button>
+        </nav>
+    </header>
+
+    <!-- ================= calculator ================= -->
+    <section id="calc" class="win" aria-labelledby="calc-t">
+        <div class="titlebar"><span id="calc-t">Cosmology calculator</span><span class="path">~/toolbox/distances</span></div>
+        <div class="win-body">
+            <div class="cols">
+                <div>
+                    <h3>Cosmology</h3>
+                    <div class="fields">
+                        <label for="preset">Preset</label>
+                        <select id="preset"></select>
+                        <label for="H0">H₀ <span class="small">km/s/Mpc</span></label>
+                        <div><input id="H0" type="number" step="0.01" value="67.66"></div>
+                        <span class="span small" style="margin-top:-4px"><span id="h0-chip" class="chip" style="margin-left:0"></span> <span id="h0-conv"></span></span>
+                        <label for="Om">Ω<sub>m</sub></label>
+                        <input id="Om" type="number" step="0.001" value="0.3111">
+                        <label for="Ode">Ω<sub>Λ</sub> / Ω<sub>DE</sub></label>
+                        <input id="Ode" type="number" step="0.001" value="0.6889">
+                        <span></span>
+                        <label class="check"><input id="flat" type="checkbox" checked><span>flat (Ω<sub>Λ</sub> = 1 − Ω<sub>m</sub> − Ω<sub>r</sub>)</span></label>
+                        <label for="Ob">Ω<sub>b</sub> <span class="small">(CMB only)</span></label>
+                        <input id="Ob" type="number" step="0.0001" value="0.04897">
+                        <label for="w0">w₀</label>
+                        <input id="w0" type="number" step="0.01" value="-1">
+                        <label for="wa">w<sub>a</sub></label>
+                        <input id="wa" type="number" step="0.01" value="0">
+                        <label for="Tcmb">T<sub>CMB</sub> <span class="small">K</span></label>
+                        <input id="Tcmb" type="number" step="0.0001" value="2.7255">
+                        <label for="Neff">N<sub>eff</sub></label>
+                        <input id="Neff" type="number" step="0.001" value="3.046">
+                    </div>
+
+                    <h3>Input</h3>
+                    <div class="fields">
+                        <label for="solve-kind">Given</label>
+                        <select id="solve-kind">
+                            <option value="z">Redshift z</option>
+                            <option value="lookback" data-name="Lookback time">Lookback time [Gyr]</option>
+                            <option value="age" data-name="Age at emission">Age at emission [Gyr]</option>
+                            <option value="DC" data-name="Comoving distance">Comoving distance [Mpc]</option>
+                            <option value="DL" data-name="Luminosity distance">Luminosity distance [Mpc]</option>
+                            <option value="DA" data-name="Angular diameter distance">Angular diameter distance [Mpc]</option>
+                            <option value="mu">Distance modulus [mag]</option>
+                        </select>
+                        <label for="solve-val">Value</label>
+                        <input id="solve-val" type="number" step="any" value="1">
+                    </div>
+                    <div class="row" style="margin-top:12px">
+                        <button id="copy-res" class="btn" type="button">Copy results</button>
+                        <button id="copy-link" class="btn" type="button">Copy link</button>
+                    </div>
+                    <p class="note">Dark energy uses w(a) = w₀ + w<sub>a</sub>(1 − a). Neutrinos are treated as massless radiation, so fold any ν mass into Ω<sub>m</sub>. Formulas follow <a href="https://arxiv.org/abs/astro-ph/9905116" target="_blank" rel="noopener">Hogg (1999)</a>.</p>
+                </div>
+
+                <div>
+                    <div id="calc-warn" class="warnbox" role="status"></div>
+                    <div class="table-wrap"><table class="res" id="calc-res"></table></div>
+                </div>
+            </div>
+
+            <div class="chart-box">
+                <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:space-between;align-items:center;padding:0 0 4px">
+                    <div class="legend" id="dist-legend" style="flex:1 1 200px;min-width:0"></div>
+                    <select id="dist-mode" aria-label="What to plot" style="min-height:28px;width:auto;padding:2px 6px;margin-right:6px">
+                        <option value="dist">Distances</option>
+                        <option value="time">Times</option>
+                    </select>
+                </div>
+                <div class="chart" id="dist-chart"></div>
+            </div>
+        </div>
+        <div class="statusbar"><span id="calc-status">Ready.</span><span class="fixed" id="calc-model">ΛCDM</span></div>
+    </section>
+
+    <!-- ================= lensing ================= -->
+    <section id="lensing" class="win" aria-labelledby="lens-t">
+        <div class="titlebar"><span id="lens-t">Two-redshift quantities (lensing)</span><span class="path">~/toolbox/lensing</span></div>
+        <div class="win-body">
+            <div class="cols">
+                <div>
+                    <p class="small">Uses the cosmology from the calculator above.</p>
+                    <div class="fields">
+                        <label for="zl">z<sub>lens</sub></label>
+                        <input id="zl" type="number" step="0.01" value="0.5">
+                        <label for="zs">z<sub>source</sub></label>
+                        <input id="zs" type="number" step="0.01" value="2">
+                        <label for="sigv">σ<sub>v</sub> (SIS) <span class="small" data-ukind="vel">km/s</span></label>
+                        <input id="sigv" type="number" step="1" value="250">
+                        <label for="mlens">M (point) <span class="small" data-ukind="mass">M☉</span></label>
+                        <input id="mlens" type="number" step="any" value="1e12">
+                    </div>
+                    <p class="note">Time-delay cosmography: wait months for one supernova to explode several times, then argue about the mass model for years.</p>
+                </div>
+                <div>
+                    <div id="lens-warn" class="warnbox" role="status"></div>
+                    <div class="table-wrap"><table class="res" id="lens-res"></table></div>
+                </div>
+            </div>
+        </div>
+        <div class="statusbar"><span id="lens-status">Ready.</span></div>
+    </section>
+
+    <!-- ================= hubble ================= -->
+    <section id="hubble" class="win" aria-labelledby="hub-t">
+        <div class="titlebar"><span id="hub-t">H₀ and the Hubble tension</span><span class="path">~/toolbox/hubble</span></div>
+        <div class="win-body">
+            <h3>Tension between two measurements</h3>
+            <div class="cols even">
+                <div class="fields">
+                    <label for="ta-sel">A</label>
+                    <select id="ta-sel"></select>
+                    <label for="ta-v">H₀ ± σ</label>
+                    <div class="row" style="flex-wrap:nowrap"><input id="ta-v" type="number" step="0.01" style="flex:1 1 0"><input id="ta-e" type="number" step="0.01" style="flex:1 1 0"></div>
+                    <label for="tb-sel">B</label>
+                    <select id="tb-sel"></select>
+                    <label for="tb-v">H₀ ± σ</label>
+                    <div class="row" style="flex-wrap:nowrap"><input id="tb-v" type="number" step="0.01" style="flex:1 1 0"><input id="tb-e" type="number" step="0.01" style="flex:1 1 0"></div>
+                    <label for="mine">Your H₀</label>
+                    <div><input id="mine" type="range" min="62" max="78" step="0.02" value="70"></div>
+                    <span></span>
+                    <div class="small"><span id="mine-v" class="num">70.00</span> km/s/Mpc <span id="mine-chip" class="chip"></span><br><span id="mine-u"></span></div>
+                </div>
+                <div>
+                    <div class="table-wrap"><table class="res" id="tension-res"></table></div>
+                </div>
+            </div>
+            <div class="chart-box">
+                <div class="legend" id="tension-legend"></div>
+                <div class="chart" id="tension-chart"></div>
+            </div>
+            <p class="note">Asymmetric error bars are symmetrised and stat and sys errors are added in quadrature. Gaussians are assumed throughout, as is tradition. Required reading: <a href="https://xkcd.com/2516/" target="_blank" rel="noopener">xkcd 2516</a>.</p>
+
+            <div class="cols even" style="margin-top:18px">
+                <div>
+                    <h3>Conversions</h3>
+                    <div class="fields">
+                        <label for="hc-H0">H₀ <span class="small">km/s/Mpc</span></label>
+                        <div class="row" style="flex-wrap:nowrap"><input id="hc-H0" type="number" step="0.01" value="67.66" style="flex:1 1 0"><button id="hc-sync" class="btn" type="button" title="Use the calculator's H₀">↺ calc</button></div>
+                        <label for="hc-d">Distance <span class="small" data-ukind="dist">Mpc</span></label>
+                        <input id="hc-d" type="number" step="any" value="100">
+                        <label for="hc-v">Velocity <span class="small" data-ukind="vel">km/s</span></label>
+                        <input id="hc-v" type="number" step="any">
+                    </div>
+                    <div class="table-wrap" style="margin-top:10px"><table class="res" id="hc-res"></table></div>
+                    <p class="note">v = H₀d is fine for z ≲ 0.05. Beyond that, use the calculator. Peculiar velocities (~300 km/s) apply at all distances and do not care about your error budget.</p>
+                </div>
+                <div>
+                    <h3>Fit H₀ to your own data</h3>
+                    <label for="fit-data" class="small">One object per line: distance [Mpc], velocity [km/s], optional σ<sub>v</sub>. Lines starting with # are ignored.</label>
+                    <textarea id="fit-data" spellcheck="false"># example data, invented like most examples
+12    880   60
+25   1690   80
+40   2900  100
+55   3770  120
+80   5690  150
+120  8300  200
+160 11350  250</textarea>
+                    <div class="row" style="margin-top:8px"><button id="fit-btn" class="btn primary" type="button">Fit v = H₀ d</button></div>
+                    <div class="table-wrap" style="margin-top:10px"><table class="res" id="fit-res"></table></div>
+                </div>
+            </div>
+        </div>
+        <div class="statusbar"><span id="hub-status">Ready.</span></div>
+    </section>
+
+    <!-- ================= cmb ================= -->
+    <section id="cmb" class="win" aria-labelledby="cmb-t">
+        <div class="titlebar"><span id="cmb-t">CMB sky simulator</span><span class="path">~/toolbox/cmb</span></div>
+        <div class="win-body">
+            <div class="cmb-wrap">
+                <div>
+                    <canvas id="cmb-canvas" width="256" height="256" aria-label="Simulated CMB temperature map"></canvas>
+                    <canvas id="cmb-bar" width="256" height="1" aria-hidden="true"></canvas>
+                    <div class="bar-labels"><span id="bar-lo">−300 μK</span><span>0</span><span id="bar-hi">+300 μK</span></div>
+                    <p class="small" id="cmb-pix" style="margin-top:6px">Click the map to read a temperature.</p>
+                </div>
+                <div>
+                    <div class="fields">
+                        <label for="cmb-seed">Seed</label>
+                        <input id="cmb-seed" type="text" value="1965" autocomplete="off" spellcheck="false">
+                        <label for="cmb-size">Patch</label>
+                        <select id="cmb-size">
+                            <option value="5">5° × 5°</option>
+                            <option value="10">10° × 10°</option>
+                            <option value="20" selected>20° × 20°</option>
+                            <option value="40">40° × 40° (flat sky is getting nervous)</option>
+                        </select>
+                        <label for="cmb-beam">Telescope</label>
+                        <select id="cmb-beam">
+                            <option value="0">Perfect (no beam)</option>
+                            <option value="1.4">ACT / SPT-like (1.4′)</option>
+                            <option value="5" selected>Planck-like (5′)</option>
+                            <option value="13.2">WMAP W-band (13′)</option>
+                            <option value="420">COBE DMR (7°)</option>
+                        </select>
+                        <label for="cmb-As">10⁹ A<sub>s</sub></label>
+                        <input id="cmb-As" type="number" step="0.01" value="2.1">
+                        <label for="cmb-ns">n<sub>s</sub></label>
+                        <input id="cmb-ns" type="number" step="0.001" value="0.9649">
+                        <label for="cmb-tau">τ<sub>reio</sub></label>
+                        <input id="cmb-tau" type="number" step="0.001" value="0.0544">
+                    </div>
+                    <div class="row" style="margin-top:10px">
+                        <button id="cmb-go" class="btn primary" type="button">Simulate</button>
+                        <button id="cmb-new" class="btn" type="button">New seed</button>
+                        <button id="cmb-png" class="btn" type="button">Save PNG</button>
+                    </div>
+                    <p class="note">H₀, Ω<sub>m</sub>, Ω<sub>b</sub>, Ω<sub>Λ</sub>, w, T<sub>CMB</sub> and N<sub>eff</sub> come from the calculator. The peak positions use the real sound horizon and angular diameter distance. The peak heights come from a toy model tuned by eye to Planck. Good for intuition, teaching and slides. For papers, use <a href="https://camb.info" target="_blank" rel="noopener">CAMB</a> or <a href="https://lesgourg.github.io/class_public/class.html" target="_blank" rel="noopener">CLASS</a>.</p>
+                </div>
+            </div>
+
+            <div class="chart-box">
+                <div class="legend" id="cl-legend"></div>
+                <div class="chart" id="cl-chart"></div>
+            </div>
+            <div class="cols even" style="margin-top:14px">
+                <div class="table-wrap"><table class="res" id="cmb-derived"></table></div>
+                <p class="small" style="margin:0">The points are the power spectrum measured from this one map, and the error bars are cosmic variance. You only get one sky. You can't ask for a second one, so the scatter at low ℓ stays.</p>
+            </div>
+        </div>
+        <div class="statusbar"><span id="cmb-status">Ready.</span></div>
+    </section>
+
+    <!-- ================= redshift ================= -->
+    <section id="redshift" class="win" aria-labelledby="z-t">
+        <div class="titlebar"><span id="z-t">Redshift and spectral lines</span><span class="path">~/toolbox/redshift</span></div>
+        <div class="win-body">
+            <div class="cols">
+                <div>
+                    <div class="fields">
+                        <label for="rz-z">z</label>
+                        <input id="rz-z" type="number" step="any" value="1">
+                        <label for="rz-a">a = 1/(1+z)</label>
+                        <input id="rz-a" type="number" step="any">
+                        <label for="rz-v">v <span class="small" data-ukind="vel">km/s</span></label>
+                        <input id="rz-v" type="number" step="any">
+                        <label for="rz-rest">custom λ<sub>rest</sub> <span class="small">Å</span></label>
+                        <input id="rz-rest" type="number" step="any" placeholder="e.g. 4340.47">
+                    </div>
+                    <div class="row" style="margin-top:10px"><button id="rz-send" class="btn" type="button">Send z to calculator</button></div>
+                    <p class="note">v is the special-relativistic Doppler velocity. For cosmological redshifts it is a convention, not a speed, and it doesn't break any speed limits. Please don't email. Optical lines use air wavelengths, UV lines use vacuum wavelengths.</p>
+                </div>
+                <div>
+                    <div id="rz-warn" class="warnbox" role="status"></div>
+                    <div class="table-wrap"><table class="res" id="rz-res"></table></div>
+                </div>
+            </div>
+        </div>
+        <div class="statusbar"><span id="rz-status">Ready.</span></div>
+    </section>
+
+    <!-- ================= units ================= -->
+    <section id="units" class="win" aria-labelledby="u-t">
+        <div class="titlebar"><span id="u-t">Unit converter</span><span class="path">~/toolbox/units</span></div>
+        <div class="win-body">
+            <div class="cols">
+                <div class="fields">
+                    <label for="u-cat">Quantity</label>
+                    <select id="u-cat">
+                        <option value="length">Length</option>
+                        <option value="time">Time</option>
+                        <option value="mass">Mass</option>
+                        <option value="energy">Energy</option>
+                    </select>
+                    <label for="u-val">Value</label>
+                    <input id="u-val" type="number" step="any" value="1">
+                    <label for="u-unit">Unit</label>
+                    <select id="u-unit"></select>
+                </div>
+                <div class="table-wrap"><table class="res" id="u-res"></table></div>
+            </div>
+        </div>
+        <div class="statusbar"><span id="u-status">Ready.</span></div>
+    </section>
+
+    <!-- ================= constants ================= -->
+    <section id="constants" class="win" aria-labelledby="k-t">
+        <div class="titlebar"><span id="k-t">Constants</span><span class="path">~/toolbox/constants</span></div>
+        <div class="win-body">
+            <div class="table-wrap"><table class="res" id="k-res"></table></div>
+            <p class="note">CODATA 2018, IAU 2012 (au) and IAU 2015 nominal solar values. Click a row to copy the number. G only has six significant figures because gravity has never liked being measured.</p>
+        </div>
+        <div class="statusbar"><span id="k-status">Click a row to copy.</span></div>
+    </section>
+
+    <!-- ================= referee 2 (hints) ================= -->
+    <section id="referee" class="win" aria-labelledby="r-t">
+        <div class="titlebar"><span id="r-t">Referee report #2</span><span class="path">~/inbox/do_not_open</span></div>
+        <div class="win-body">
+            <div class="report" id="report" aria-live="polite"></div>
+            <div class="row" style="margin-top:10px">
+                <button id="report-next" class="btn" type="button">Request another round of review</button>
+                <span class="small" id="report-count"></span>
+            </div>
+        </div>
+        <div class="statusbar"><span>Recommendation: major revision.</span></div>
+    </section>
+
+    <footer>
+        <div class="pie" aria-label="This page is about 5% visible content, 27% hidden content and 68% content nobody can explain.">
+            <svg width="34" height="34" viewBox="-1 -1 2 2" aria-hidden="true" style="transform:rotate(-90deg)">
+                <circle r="1" fill="#33465c"/>
+                <path d="M0 0 L1 0 A1 1 0 0 1 0.951 0.309 Z" fill="#e9c87a"/>
+                <path d="M0 0 L0.951 0.309 A1 1 0 0 1 -0.905 0.426 Z" fill="#6d6f7a"/>
+            </svg>
+            <span>Page composition: 5% visible content, 27% hidden content, 68% unexplained.</span>
+        </div><br>
+        Catch a shooting star for a hint. <button id="wish" class="btn wish" type="button">Wish upon a star</button><br>
+        Runs in your browser. Nothing is sent anywhere, apart from photons, which leave at c.<br>
+        If this saved you time, cite the papers in the notes, not the page.
+    </footer>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"><b class="k" id="toast-k">Note</b><span id="toast-msg"></span><button class="x" type="button" aria-label="Dismiss">×</button></div>
+
+<script>
+'use strict';
+
+/* =====================================================================
+   tiny helpers
+   ===================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const num = id => parseFloat($('#' + id).value);
+const SUPS = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+const sup = n => String(n).split('').map(ch => SUPS[ch] || ch).join('');
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
+
+/* human-readable number. scientific notation outside [1e-3, 1e6) */
+function fmt(x, sig = 4) {
+    if (x === Infinity) return '∞';
+    if (x === -Infinity) return '−∞';
+    if (!Number.isFinite(x)) return '—';
+    if (x === 0) return '0';
+    const ax = Math.abs(x);
+    if (ax >= 1e6 || ax < 1e-3) {
+        let e = Math.floor(Math.log10(ax));
+        let m = x / 10 ** e;
+        if (Math.abs(+m.toPrecision(sig)) >= 10) { e += 1; m /= 10; }
+        return (+m.toPrecision(sig)).toString().replace('-', '−') + ' × 10' + sup(e);
+    }
+    return (+x.toPrecision(sig)).toLocaleString('en-US', { maximumSignificantDigits: sig }).replace('-', '−');
+}
+/* plain number for copy/paste */
+const plain = (x, sig = 7) => Number.isFinite(x) ? String(+x.toPrecision(sig)) : String(x);
+
+function simpson(f, a, b, n) {
+    if (n % 2) n++;
+    const h = (b - a) / n;
+    let s = f(a) + f(b);
+    for (let i = 1; i < n; i++) s += f(a + i * h) * (i % 2 ? 4 : 2);
+    return s * h / 3;
+}
+function bisect(g, lo, hi, iters = 80) {
+    let glo = g(lo);
+    for (let i = 0; i < iters; i++) {
+        const mid = 0.5 * (lo + hi), gm = g(mid);
+        if ((gm < 0) === (glo < 0)) { lo = mid; glo = gm; } else hi = mid;
+    }
+    return 0.5 * (lo + hi);
+}
+function erfc(x) {   // numerical recipes erfcc, fractional error < 1.2e-7
+    const z = Math.abs(x), t = 1 / (1 + 0.5 * z);
+    const r = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))));
+    return x >= 0 ? r : 2 - r;
+}
+async function copyText(text, statusEl, what) {
+    try { await navigator.clipboard.writeText(text); if (statusEl) statusEl.textContent = `Copied ${what}.`; }
+    catch { if (statusEl) statusEl.textContent = 'Clipboard blocked by the browser. Select and copy by hand, like it is 1997.'; }
+}
+function rowsHTML(rows) {
+    return rows.map(r => {
+        if (r.sec) return `<tr class="sec"><td colspan="3">${r.sec}</td></tr>`;
+        return `<tr${r.hl ? ' class="hl"' : ''}><th scope="row">${r.label}</th><td class="v">${r.v}</td><td class="alt">${r.alt || ''}</td></tr>`;
+    }).join('');
+}
+
+/* =====================================================================
+   physics
+   ===================================================================== */
+const PHYS = {
+    c: 299792458, G: 6.67430e-11, h: 6.62607015e-34, hbar: 1.054571817e-34, kB: 1.380649e-23,
+    sigmaSB: 5.670374419e-8, sigmaT: 6.6524587321e-29, mp: 1.67262192369e-27, me: 9.1093837015e-31,
+    e: 1.602176634e-19, NA: 6.02214076e23, alpha: 7.2973525693e-3,
+    au: 1.495978707e11, pc: 3.0856775814913673e16, Mpc: 3.0856775814913673e22, ly: 9.4607304725808e15,
+    yr: 3.15576e7, Gyr: 3.15576e16, Msun: 1.98841e30, Lsun: 3.828e26, Rsun: 6.957e8,
+    Mearth: 5.9722e24, Rearth: 6.3781e6, Mjup: 1.89813e27, eV: 1.602176634e-19
+};
+const C_KMS = PHYS.c / 1e3;
+
+const PRESETS = {
+    planck18: { label: 'Planck 2018 (+BAO)', H0: 67.66, Om: 0.3111, Ode: 0.6889, Ob: 0.04897, flat: true },
+    planck15: { label: 'Planck 2015', H0: 67.74, Om: 0.3075, Ode: 0.6925, Ob: 0.0486, flat: true },
+    wmap9: { label: 'WMAP 9-year', H0: 69.32, Om: 0.2865, Ode: 0.7135, Ob: 0.04628, flat: true },
+    concord: { label: 'Round numbers (70, 0.3, 0.7)', H0: 70, Om: 0.3, Ode: 0.7, Ob: 0.05, flat: true },
+    shoes: { label: 'SH0ES H₀ + Planck Ωm', H0: 73.04, Om: 0.3111, Ode: 0.6889, Ob: 0.04897, flat: true },
+    w0wa: { label: 'Evolving dark energy (w₀ −0.75, wₐ −0.85, illustrative)', H0: 67.5, Om: 0.315, Ode: 0.685, Ob: 0.049, w0: -0.75, wa: -0.85, flat: true },
+    eds: { label: 'Einstein–de Sitter (Ωm = 1)', H0: 70, Om: 1, Ode: 0, Ob: 0.05, flat: false },
+    milne: { label: 'Milne (empty)', H0: 70, Om: 0, Ode: 0, Ob: 0, flat: false },
+    hubble29: { label: 'Hubble (1929)', H0: 500, Om: 1, Ode: 0, Ob: 0.05, flat: false },
+    custom: { label: 'Custom' }
+};
+const PRESET_DEFAULTS = { w0: -1, wa: 0, Tcmb: 2.7255, Neff: 3.046 };
+
+function makeCosmo(p) {
+    const H0s = p.H0 * 1e3 / PHYS.Mpc;
+    const rhoCrit0 = 3 * H0s * H0s / (8 * Math.PI * PHYS.G);
+    const Og = 4 * PHYS.sigmaSB * p.Tcmb ** 4 / PHYS.c ** 3 / rhoCrit0;
+    const Or = Og * (1 + 0.22710731766 * p.Neff);
+    const Om = p.Om;
+    const Ode = p.flat ? 1 - Om - Or : p.Ode;
+    const Ok = 1 - Om - Or - Ode;
+    const { w0, wa } = p;
+    const lcdm = w0 === -1 && wa === 0;
+    const fde = a => lcdm ? 1 : a ** (-3 * (1 + w0 + wa)) * Math.exp(-3 * wa * (1 - a));
+    const E2 = a => Or / a ** 4 + Om / a ** 3 + Ok / a ** 2 + Ode * fde(a);
+    const E = a => Math.sqrt(E2(a));
+    const c = {
+        p, H0: p.H0, h: p.H0 / 100, H0s, rhoCrit0, Og, Or, Om, Ob: p.Ob, Ode, Ok, fde, E2, E, lcdm,
+        DH: C_KMS / p.H0,                 // Mpc
+        tH: 1 / H0s / PHYS.Gyr            // Gyr
+    };
+    c.wde = a => w0 + wa * (1 - a);
+
+    // can this universe even have a big bang?
+    c.noBigBang = false;
+    for (let i = 0; i <= 800; i++) {
+        const a = 10 ** (-10 + 10 * i / 800);
+        if (!(E2(a) > 0)) { c.noBigBang = true; break; }
+    }
+    c.steady = !c.noBigBang && Om + Or < 1e-12 && Ok <= 1e-12;
+    c.crunch = false;
+    for (let i = 1; i <= 500; i++) {
+        const a = 10 ** (5 * i / 500);
+        if (!(E2(a) > 0)) { c.crunch = true; c.aMax = a; break; }
+    }
+    c.rip = (!c.crunch && wa === 0 && w0 < -1 && Ode > 0) ? (2 / 3) / Math.abs(1 + w0) * c.tH / Math.sqrt(Ode) : NaN;
+
+    c.transverse = x => Ok > 1e-9 ? Math.sinh(Math.sqrt(Ok) * x) / Math.sqrt(Ok)
+                      : Ok < -1e-9 ? Math.sin(Math.sqrt(-Ok) * x) / Math.sqrt(-Ok) : x;
+    // comoving distance in units of D_H, integrated in u = ln a
+    c.chi = z => {
+        if (z <= 0) return 0;
+        const u0 = -Math.log1p(z);
+        const n = Math.max(240, Math.ceil(-u0 * 260));
+        return simpson(u => { const a = Math.exp(u); return 1 / (a * E(a)); }, u0, 0, n);
+    };
+    c.DC = z => c.DH * c.chi(z);
+    c.DM = z => c.DH * c.transverse(c.chi(z));
+    c.DA = z => c.DM(z) / (1 + z);
+    c.DL = z => c.DM(z) * (1 + z);
+    c.mu = z => 5 * Math.log10(c.DL(z) * 1e5);
+    c.lookback = z => {
+        if (z <= 0) return 0;
+        const u0 = -Math.log1p(z);
+        return c.tH * simpson(u => 1 / E(Math.exp(u)), u0, 0, Math.max(240, Math.ceil(-u0 * 260)));
+    };
+    c.age = z => {
+        if (c.steady) return Infinity;
+        const ua = -Math.log1p(z);
+        return c.tH * simpson(u => 1 / E(Math.exp(u)), ua - 32, ua, 3200);
+    };
+    c.q = a => (Or / a ** 4 + 0.5 * Om / a ** 3 + 0.5 * Ode * fde(a) * (1 + 3 * c.wde(a))) / E2(a);
+    c.Vc = z => {      // comoving volume, Mpc^3
+        const DM = c.DM(z), x = DM / c.DH;
+        if (Math.abs(Ok) < 1e-9) return 4 / 3 * Math.PI * DM ** 3;
+        const s = Math.sqrt(Math.abs(Ok));
+        const inv = Ok > 0 ? Math.asinh(s * x) / s : Math.asin(s * x) / s;
+        return 4 * Math.PI * c.DH ** 3 / (2 * Ok) * (x * Math.sqrt(1 + Ok * x * x) - inv);
+    };
+    // D_A between two redshifts (Hogg eq. 19, valid for Ok >= 0, fine for closed too in practice)
+    c.DA12 = (z1, z2) => {
+        if (Math.abs(Ok) < 1e-9 || Ok < 0) {
+            if (Ok < -1e-9) {   // closed: use comoving difference directly
+                return c.DH * c.transverse(c.chi(z2) - c.chi(z1)) / (1 + z2);
+            }
+            return (c.DM(z2) - c.DM(z1)) / (1 + z2);
+        }
+        const d1 = c.DM(z1) / c.DH, d2 = c.DM(z2) / c.DH;
+        return c.DH * (d2 * Math.sqrt(1 + Ok * d1 * d1) - d1 * Math.sqrt(1 + Ok * d2 * d2)) / (1 + z2);
+    };
+    return c;
+}
+
+function solveZ(c, kind, target) {
+    const f = { lookback: c.lookback, age: c.age, DC: c.DC, DL: c.DL, mu: c.mu, DA: c.DA }[kind];
+    const tMax = Math.log1p(1e5);
+    const g = t => f(Math.expm1(t)) - target;
+    const out = { z: NaN, z2: NaN, peak: NaN };
+    if (kind === 'DA') {
+        // D_A turns over. golden-section for the peak, then one root either side
+        let a = 0, b = Math.log1p(200);
+        const gr = (Math.sqrt(5) - 1) / 2;
+        for (let i = 0; i < 70; i++) {
+            const x1 = b - gr * (b - a), x2 = a + gr * (b - a);
+            if (f(Math.expm1(x1)) < f(Math.expm1(x2))) a = x1; else b = x2;
+        }
+        const tp = 0.5 * (a + b);
+        out.peak = f(Math.expm1(tp));
+        out.zPeak = Math.expm1(tp);
+        if (target > out.peak || target < 0) return out;
+        out.z = Math.expm1(bisect(g, 0, tp));
+        if (g(tMax) < 0) out.z2 = Math.expm1(bisect(g, tp, tMax));
+        return out;
+    }
+    const lo = g(0), hi = g(tMax);
+    if (!(lo * hi <= 0)) return out;
+    out.z = Math.expm1(bisect(g, 0, tMax));
+    return out;
+}
+
+/* =====================================================================
+   remarks / toast / once-only easter eggs
+   ===================================================================== */
+const toast = $('#toast');
+let toastTimer = 0;
+function note(html, kind = 'Note', ms = 10000) {
+    $('#toast-k').textContent = kind;
+    $('#toast-msg').innerHTML = html;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), ms);
+}
+toast.querySelector('.x').addEventListener('click', () => toast.classList.remove('show'));
+const seen = new Set();
+function once(key, html, kind) { if (seen.has(key)) return; seen.add(key); note(html, kind); }
+let userTouched = false;   // no remarks for the default page load
+
+/* =====================================================================
+   the hubble tension, in data
+   ===================================================================== */
+const H0_EARLY = [
+    { name: 'Planck 2018 (CMB)', ref: 'Planck Collab. 2020, A&A 641, A6', v: 67.36, e: 0.54 },
+    { name: 'Planck 2018 + BAO', ref: 'Planck Collab. 2020', v: 67.66, e: 0.42 },
+    { name: 'BBN + BAO (DESI 2024)', ref: 'DESI Collab. 2024', v: 68.52, e: 0.62 },
+];
+const H0_LATE = [
+    { name: 'SH0ES Cepheids + SNe Ia', ref: 'Riess et al. 2022', v: 73.04, e: 1.04 },
+    { name: 'TRGB + SNe Ia (CCHP)', ref: 'Freedman et al. 2021', v: 69.8, e: 1.7 },
+    { name: 'Lensed quasars (H0LiCOW)', ref: 'Wong et al. 2020', v: 73.3, e: 1.75 },
+    { name: 'Lensed quasars + SLACS (TDCOSMO)', ref: 'Birrer et al. 2020', v: 67.4, e: 3.65 },
+    { name: 'Lensed SN Refsdal', ref: 'Kelly et al. 2023', v: 66.6, e: 3.7 },
+    { name: 'Lensed SN H0pe', ref: 'Pascale et al. 2025', v: 75.4, e: 6.8 },
+    { name: 'Megamasers (MCP)', ref: 'Pesce et al. 2020', v: 73.9, e: 3.0 },
+];
+// values that make people pick a side
+const EARLY_VALUES = [67.36, 67.4, 67.66, 67.7, 67.74, 68.52, 69.32, 67.5];
+const LATE_VALUES = [73.04, 73, 73.2, 73.3, 73.5, 73.9, 74.03, 72, 75.4];
+function h0Team(v) {
+    const is = list => list.some(x => Math.abs(x - v) < 0.005);
+    if (Math.abs(v - 70) < 0.005) return 'mid';
+    if (Math.abs(v - 69.8) < 0.005) return 'trgb';
+    if (is(EARLY_VALUES)) return 'early';
+    if (is(LATE_VALUES)) return 'late';
+    return '';
+}
+const TEAM_CHIP = { early: ['early', 'early-universe value'], late: ['late', 'late-universe value'], mid: ['mid', 'diplomatic'], trgb: ['mid', 'red giants, in the middle'] };
+function setChip(el, v) {
+    const t = h0Team(v);
+    el.className = 'chip' + (t ? ' ' + TEAM_CHIP[t][0] : '');
+    el.textContent = t ? TEAM_CHIP[t][1] : '';
+}
+function teamRemark(v) {
+    const t = h0Team(v);
+    if (!t || !userTouched) return;
+    const s = fmt(v, 5);
+    const text = {
+        early: `H₀ = ${s} is an early-universe value. The CMB approves. Somewhere a Cepheid is filing a complaint.`,
+        late: `H₀ = ${s} is a late-universe value. The distance ladder thanks you. Planck disagrees at about 5σ and would like a word.`,
+        mid: `H₀ = 70: the diplomatic choice. Both camps are now equally disappointed in you. See also <a href="https://xkcd.com/2516/" target="_blank" rel="noopener">xkcd 2516</a>.`,
+        trgb: `H₀ = 69.8: tip of the red giant branch, conveniently between both camps. Expect emails from each.`
+    }[t];
+    once('team-' + t + s, text, 'Hubble tension');
+}
+
+/* =====================================================================
+   charts. small, hand-rolled, svg, sized to the container
+   ===================================================================== */
+const NS = 'http://www.w3.org/2000/svg';
+function sv(tag, attrs, parent) {
+    const el = document.createElementNS(NS, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(el);
+    return el;
+}
+function niceTicks(lo, hi, n) {
+    const span = hi - lo, step0 = span / n, mag = 10 ** Math.floor(Math.log10(step0));
+    const step = [1, 2, 2.5, 5, 10].map(s => s * mag).find(s => span / s <= n) || 10 * mag;
+    const out = [];
+    for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step) out.push(+v.toPrecision(12));
+    return out;
+}
+function logTicks(lo, hi, skip = 1) {
+    const out = [];
+    for (let e = Math.ceil(Math.log10(lo) - 1e-9); e <= Math.floor(Math.log10(hi) + 1e-9); e += skip) out.push(10 ** e);
+    return out;
+}
+const tickLabel = v => {
+    if (v === 0) return '0';
+    const e = Math.log10(Math.abs(v));
+    if (Math.abs(e - Math.round(e)) < 1e-9 && (e >= 5 || e <= -3)) return '10' + sup(Math.round(e));
+    return fmt(v, 4);
+};
+
+/* cfg: { x:[lo,hi], y:[lo,hi], xLog, yLog, xLabel, yLabel, series:[{name,color,pts,dash,dots,err,label}],
+          vlines:[{x,label}], marks:[{x,y,label}], hover:{xs, rows(i)} , height } */
+function drawChart(host, cfg) {
+    host.innerHTML = '';
+    const W = Math.max(260, host.clientWidth);
+    const H = cfg.height || (W < 480 ? 260 : 300);
+    const narrow = W < 480;
+    const labelled = cfg.series.some(s => s.label);
+    const m = { l: narrow ? 46 : 58, r: labelled ? (narrow ? 44 : 64) : 14, t: 16, b: 40 };
+    const iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const tx = cfg.xLog ? Math.log10 : v => v, ty = cfg.yLog ? Math.log10 : v => v;
+    const X0 = tx(cfg.x[0]), X1 = tx(cfg.x[1]), Y0 = ty(cfg.y[0]), Y1 = ty(cfg.y[1]);
+    const sx = v => m.l + (tx(v) - X0) / (X1 - X0) * iw;
+    const sy = v => m.t + ih - (ty(v) - Y0) / (Y1 - Y0) * ih;
+    const svg = sv('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': cfg.title || 'chart' });
+
+    const yt = cfg.yLog ? logTicks(cfg.y[0], cfg.y[1], narrow ? 2 : 1) : niceTicks(cfg.y[0], cfg.y[1], 5);
+    const xt = cfg.xLog ? logTicks(cfg.x[0], cfg.x[1]) : niceTicks(cfg.x[0], cfg.x[1], narrow ? 4 : 7);
+    for (const v of yt) {
+        const y = sy(v);
+        sv('line', { x1: m.l, x2: m.l + iw, y1: y, y2: y, class: 'gridline' }, svg);
+        sv('text', { x: m.l - 6, y: y + 4, 'text-anchor': 'end' }, svg).textContent = tickLabel(v);
+    }
+    for (const v of xt) {
+        const x = sx(v);
+        sv('line', { x1: x, x2: x, y1: m.t + ih, y2: m.t + ih + 4, class: 'axisline' }, svg);
+        sv('text', { x, y: m.t + ih + 17, 'text-anchor': 'middle' }, svg).textContent = tickLabel(v);
+    }
+    sv('line', { x1: m.l, x2: m.l + iw, y1: m.t + ih, y2: m.t + ih, class: 'axisline' }, svg);
+    sv('text', { x: m.l + iw / 2, y: H - 4, 'text-anchor': 'middle' }, svg).textContent = cfg.xLabel;
+    sv('text', { x: 12, y: m.t + ih / 2, 'text-anchor': 'middle', transform: `rotate(-90 12 ${m.t + ih / 2})` }, svg).textContent = cfg.yLabel;
+
+    const clipId = 'c' + Math.random().toString(36).slice(2);
+    const cp = sv('clipPath', { id: clipId }, sv('defs', {}, svg));
+    sv('rect', { x: m.l, y: m.t - 2, width: iw, height: ih + 4 }, cp);
+    const plot = sv('g', { 'clip-path': `url(#${clipId})` }, svg);
+    const inY = v => Number.isFinite(v) && (!cfg.yLog || v > 0);
+
+    for (const v of cfg.vlines || []) {
+        if (v.x < cfg.x[0] || v.x > cfg.x[1]) continue;
+        const x = sx(v.x);
+        sv('line', { x1: x, x2: x, y1: m.t, y2: m.t + ih, class: 'cross', style: 'stroke:var(--well-text);opacity:.55' }, svg);
+        if (v.label) sv('text', { x: x + 4, y: m.t + 9, class: 'lbl' }, svg).textContent = v.label;
+    }
+
+    for (const s of cfg.series) {
+        if (s.dots) {
+            for (const [i, [x, y]] of s.pts.entries()) {
+                if (!inY(y) || x < cfg.x[0] || x > cfg.x[1]) continue;
+                if (s.err) {
+                    const e = s.err[i];
+                    const ylo = cfg.yLog ? Math.max(y - e, cfg.y[0]) : y - e;
+                    sv('line', { x1: sx(x), x2: sx(x), y1: sy(ylo), y2: sy(y + e), stroke: s.color, 'stroke-width': 1.5, opacity: 0.7 }, plot);
+                }
+                sv('circle', { cx: sx(x), cy: sy(y), r: 4, fill: s.color, stroke: 'var(--well)', 'stroke-width': 2 }, plot);
+            }
+            continue;
+        }
+        let d = '', pen = false, last = null;
+        for (const [x, y] of s.pts) {
+            if (!inY(y)) { pen = false; continue; }
+            d += (pen ? 'L' : 'M') + sx(x).toFixed(1) + ' ' + sy(y).toFixed(1);
+            pen = true;
+            if (x <= cfg.x[1]) last = [x, y];
+        }
+        sv('path', { d, fill: 'none', stroke: s.color, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-dasharray': s.dash ? '6 4' : 'none' }, plot);
+        if (s.label && last) {
+            const ly = Math.min(Math.max(sy(last[1]), m.t + 6), m.t + ih - 2);
+            sv('text', { x: sx(last[0]) + 6, y: ly + 4, class: 'lbl' }, svg).textContent = s.label;
+        }
+    }
+    for (const mk of cfg.marks || []) {
+        if (!inY(mk.y)) continue;
+        sv('circle', { cx: sx(mk.x), cy: sy(mk.y), r: 4, fill: 'var(--well-text)', stroke: 'var(--well)', 'stroke-width': 2 }, svg);
+        const right = sx(mk.x) < m.l + iw * 0.6;
+        sv('text', { x: sx(mk.x) + (right ? 8 : -8), y: sy(mk.y) - 8, 'text-anchor': right ? 'start' : 'end', class: 'lbl' }, svg).textContent = mk.label;
+    }
+
+    host.appendChild(svg);
+    if (!cfg.hover) return;
+
+    // hover layer: crosshair + tooltip
+    const cross = sv('line', { y1: m.t, y2: m.t + ih, class: 'cross', visibility: 'hidden' }, svg);
+    const dotsG = sv('g', {}, svg);
+    const tip = document.createElement('div');
+    tip.className = 'tip';
+    tip.hidden = true;
+    host.appendChild(tip);
+    const hit = sv('rect', { x: m.l, y: m.t, width: iw, height: ih, fill: 'transparent', style: 'cursor:crosshair' }, svg);
+    const xs = cfg.hover.xs;
+    const move = ev => {
+        const r = svg.getBoundingClientRect();
+        const px = ev.clientX - r.left;
+        const xv = cfg.xLog ? 10 ** (X0 + (px - m.l) / iw * (X1 - X0)) : X0 + (px - m.l) / iw * (X1 - X0);
+        let lo = 0, hi = xs.length - 1;
+        while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (xs[mid] < xv) lo = mid; else hi = mid; }
+        const i = Math.abs(tx(xs[lo]) - tx(xv)) < Math.abs(tx(xs[hi]) - tx(xv)) ? lo : hi;
+        const info = cfg.hover.rows(i);
+        const x = sx(xs[i]);
+        cross.setAttribute('x1', x); cross.setAttribute('x2', x); cross.setAttribute('visibility', 'visible');
+        dotsG.innerHTML = '';
+        for (const row of info.rows) if (row.y !== undefined && inY(row.y)) sv('circle', { cx: x, cy: sy(row.y), r: 4, fill: row.color, stroke: 'var(--well)', 'stroke-width': 2 }, dotsG);
+        tip.innerHTML = `<b>${info.title}</b><br>` + info.rows.map(row =>
+            `<span class="sw" style="background:${row.color}"></span>${row.name}: <span class="num">${row.text}</span>`).join('<br>');
+        tip.hidden = false;
+        const tw = tip.offsetWidth, th = tip.offsetHeight;
+        let left = x + 12; if (left + tw > W) left = x - tw - 12;
+        tip.style.left = Math.max(0, left) + 'px';
+        tip.style.top = Math.max(0, Math.min(ev.clientY - r.top - th / 2, H - th)) + 'px';
+    };
+    hit.addEventListener('pointermove', move);
+    hit.addEventListener('pointerdown', move);
+    hit.addEventListener('pointerleave', () => { cross.setAttribute('visibility', 'hidden'); dotsG.innerHTML = ''; tip.hidden = true; });
+}
+function legend(el, items) {
+    el.innerHTML = items.map(it => `<span><i class="${it.dots ? 'dot' : it.dash ? 'dash' : ''}" style="${it.dots ? 'background' : 'border-color'}:${it.color}"></i>${it.name}</span>`).join('');
+}
+
+/* =====================================================================
+   unit systems. every displayed quantity goes through U(kind, value_in_SI)
+   kinds: dist, small, time, short, mass, dens, surf, temp, vel, H, vol
+   ===================================================================== */
+const hNow = () => cosmo ? cosmo.h : 0.6766;
+const HANDEGG = 91.44;                 // 100 yd. end zones not included. not football
+const PARKING = 5.4864;                // 18 ft parking space
+const BIGMAC = 0.219;                  // kg, roughly
+const DEATHSTAR_R = 80e3;              // DS-1, 160 km across
+const DS_VOL = 4 / 3 * Math.PI * DEATHSTAR_R ** 3;
+const WOOKIEE = 112;                   // kg, one Chewbacca
+const UNIT_SYSTEMS = {
+    cosmo: { label: 'Cosmologist (Mpc, Gyr, M☉)', dT: ['μK', 1e6], u: { wave: ['Å', 1e-10],
+        dist: ['Mpc', PHYS.Mpc], small: ['kpc', PHYS.pc * 1e3], time: ['Gyr', PHYS.Gyr], short: ['days', 86400], mass: ['M☉', PHYS.Msun],
+        dens: ['M☉/Mpc³', PHYS.Msun / PHYS.Mpc ** 3], surf: ['M☉/pc²', PHYS.Msun / PHYS.pc ** 2], temp: ['K', 1], vel: ['km/s', 1e3],
+        H: ['km/s/Mpc', 1e3 / PHYS.Mpc], vol: ['Gpc³', (PHYS.Mpc * 1e3) ** 3] } },
+    sim: { label: 'Simulator (h⁻¹ Mpc)', dT: ['μK', 1e6], u: { wave: ['Å', 1e-10],
+        dist: ['h⁻¹ Mpc', () => PHYS.Mpc / hNow()], small: ['h⁻¹ kpc', () => PHYS.pc * 1e3 / hNow()], time: ['h⁻¹ Gyr', () => PHYS.Gyr / hNow()], short: ['days', 86400],
+        mass: ['h⁻¹ M☉', () => PHYS.Msun / hNow()], dens: ['h² M☉/Mpc³', () => PHYS.Msun / PHYS.Mpc ** 3 * hNow() ** 2], surf: ['h M☉/pc²', () => PHYS.Msun / PHYS.pc ** 2 * hNow()],
+        temp: ['K', 1], vel: ['km/s', 1e3], H: ['h km/s/Mpc', () => 1e3 / PHYS.Mpc * hNow()], vol: ['h⁻³ Gpc³', () => (PHYS.Mpc * 1e3 / hNow()) ** 3] } },
+    si: { label: 'Metric (SI)', dT: ['μK', 1e6], u: { wave: ['m', 1],
+        dist: ['m', 1], small: ['m', 1], time: ['s', 1], short: ['s', 1], mass: ['kg', 1], dens: ['kg/m³', 1], surf: ['kg/m²', 1],
+        temp: ['K', 1], vel: ['m/s', 1], H: ['s⁻¹', 1], vol: ['m³', 1] } },
+    cgs: { label: 'cgs (astronomers, out of habit)', dT: ['μK', 1e6], u: { wave: ['cm', 0.01],
+        dist: ['cm', 0.01], small: ['cm', 0.01], time: ['s', 1], short: ['s', 1], mass: ['g', 1e-3], dens: ['g/cm³', 1e3], surf: ['g/cm²', 10],
+        temp: ['K', 1], vel: ['cm/s', 0.01], H: ['s⁻¹', 1], vol: ['cm³', 1e-6] } },
+    natural: { label: 'Natural (ħ = c = k_B = 1)', dT: ['neV', 8.617333262e4], u: { wave: ['GeV⁻¹', 1.973269804e-16],
+        dist: ['GeV⁻¹', 1.973269804e-16], small: ['GeV⁻¹', 1.973269804e-16], time: ['GeV⁻¹', 6.582119569e-25], short: ['GeV⁻¹', 6.582119569e-25],
+        mass: ['GeV', 1.78266192e-27], dens: ['GeV⁴', 1.78266192e-27 / 1.973269804e-16 ** 3], surf: ['GeV³', 1.78266192e-27 / 1.973269804e-16 ** 2],
+        temp: ['eV', 11604.51812], vel: ['c', PHYS.c], H: ['GeV', 1 / 6.582119569e-25], vol: ['GeV⁻³', 1.973269804e-16 ** 3] } },
+    imperial: { label: 'Imperial (furlongs, fortnights, stone)', dT: ['μ°R', 1.8e6], u: { wave: ['thou', 2.54e-5],
+        dist: ['furlongs', 201.168], small: ['miles', 1609.344], time: ['fortnights', 1209600], short: ['fortnights', 1209600], mass: ['stone', 6.35029318],
+        dens: ['stone/gallon', 6.35029318 / 4.54609e-3], surf: ['stone/acre', 6.35029318 / 4046.8564224], temp: ['°R', 5 / 9],
+        vel: ['furlongs/fortnight', 201.168 / 1209600], H: ['furlongs/fortnight per furlong', 1 / 1209600], vol: ['imperial gallons', 4.54609e-3] } },
+    american: { label: 'American (handegg fields, Big Macs)', tempF: true, dT: ['μ°F', 1.8e6], u: { wave: ['inches', 0.0254],
+        dist: ['handegg fields', HANDEGG], small: ['parking spaces', PARKING], time: ['presidential terms', 4 * PHYS.yr], short: ['drive-thru waits', 360],
+        mass: ['Big Macs', BIGMAC], dens: ['Big Macs/barrel', BIGMAC / 0.158987294928], surf: ['Big Macs/parking space', BIGMAC / (2.7432 * PARKING)],
+        temp: ['°F', 1], vel: ['mph', 0.44704], H: ['mph per handegg field', 0.44704 / HANDEGG], vol: ['oil barrels', 0.158987294928] } },
+    starwars: { label: 'Star Wars (Kessel Runs, Wookiees)', dT: ['μK', 1e6], u: { wave: ['Death Star diameters', 2 * DEATHSTAR_R],
+        dist: ['Kessel Runs', 12 * PHYS.pc], small: ['Death Star diameters', 2 * DEATHSTAR_R], time: ['standard years', 368 * 86400], short: ['standard hours', 3600],
+        mass: ['Wookiees', WOOKIEE], dens: ['Wookiees per Death Star', WOOKIEE / DS_VOL], surf: ['Wookiees/m²', WOOKIEE], temp: ['K', 1],
+        vel: ['× lightspeed', PHYS.c], H: ['km/s per Kessel Run', 1e3 / (12 * PHYS.pc)], vol: ['Death Stars', DS_VOL] } },
+};
+const UNIT_REMARKS = {
+    sim: 'Distances in h⁻¹ Mpc. Now nobody has to commit to a value of H₀. Very convenient, and very popular with people who run simulations.',
+    si: 'SI units. The Hubble distance is about 10²⁶ m. You will need a long ruler.',
+    cgs: 'cgs units: the system astronomers keep using because their textbooks do. Luminosities in erg/s, as nature intended.',
+    natural: 'Natural units, ħ = c = k_B = 1. H₀ comes out around 10⁻⁴² GeV, which particle physicists find perfectly reasonable.',
+    imperial: 'Imperial units. Velocities in furlongs per fortnight, temperature in Rankine (absolute Fahrenheit, for the thermodynamically inclined). The comoving volume in gallons is left as an exercise.',
+    american: 'American units. Distances in handegg fields (100 yards, end zones not included, and it is not football), masses in Big Macs, short times in drive-thru waits, density in Big Macs per oil barrel. Long times are in presidential terms, which assumes four full years each. Impeachments and other early exits are not modelled (live status: <a href="https://is-he-dead-yet.com/" target="_blank" rel="noopener">is-he-dead-yet.com</a>). T_CMB = −454.76 °F, so bring a jacket.',
+    starwars: 'Star Wars units. Distances in Kessel Runs (12 parsecs each, which are a distance, not a time; we have been over this), masses in Wookiees, volumes in Death Stars. Calendar: 368-day Galactic Standard years.',
+};
+let unitSys = 'cosmo';
+try { const u = localStorage.getItem('cosmo-units'); if (u && UNIT_SYSTEMS[u]) unitSys = u; } catch {}
+function unitOf(kind, sys = unitSys) {
+    const [name, f] = UNIT_SYSTEMS[sys].u[kind];
+    return { name, f: typeof f === 'function' ? f() : f };
+}
+// value in the chosen unit (temperature may be affine)
+function Uval(kind, si, sys = unitSys) {
+    if (kind === 'temp' && UNIT_SYSTEMS[sys].tempF) return si * 9 / 5 - 459.67;
+    return si / unitOf(kind, sys).f;
+}
+// inverse of Uval: value in the chosen unit -> SI
+function toSI(kind, v, sys = unitSys) {
+    if (kind === 'temp' && UNIT_SYSTEMS[sys].tempF) return (v + 459.67) * 5 / 9;
+    return v * unitOf(kind, sys).f;
+}
+// temperature differences (CMB anisotropies), given in kelvin
+const dTstr = (dK, sig = 4) => { const [n, f] = UNIT_SYSTEMS[unitSys].dT; return fmt(dK * f, sig) + ' ' + n; };
+const U = (kind, si, sig = 5, sys = unitSys) => fmt(Uval(kind, si, sys), sig) + ' ' + unitOf(kind, sys).name;
+const Uc = (kind, si, sig = 5) => U(kind, si, sig, 'cosmo');
+// third column: the usual cosmologist value when a silly system is active, otherwise whatever extra info we had
+const altOr = (kind, si, cosmoAlt = '') => unitSys === 'cosmo' ? cosmoAlt : Uc(kind, si);
+
+/* =====================================================================
+   calculator
+   ===================================================================== */
+const presetSel = $('#preset');
+for (const [k, p] of Object.entries(PRESETS)) presetSel.add(new Option(p.label, k));
+const SOLVE_KIND = { lookback: ['time', PHYS.Gyr], age: ['time', PHYS.Gyr], DC: ['dist', PHYS.Mpc], DL: ['dist', PHYS.Mpc], DA: ['dist', PHYS.Mpc] };
+const solveToInternal = (k, v, sys = unitSys) => SOLVE_KIND[k] ? toSI(SOLVE_KIND[k][0], v, sys) / SOLVE_KIND[k][1] : v;
+const solveFromInternal = (k, v, sys = unitSys) => SOLVE_KIND[k] ? Uval(SOLVE_KIND[k][0], v * SOLVE_KIND[k][1], sys) : v;
+const PARAM_IDS = ['H0', 'Om', 'Ode', 'Ob', 'w0', 'wa', 'Tcmb', 'Neff'];
+let cosmo = null;          // current cosmology, shared with the other windows
+let lastState = {};
+
+function readParams() {
+    const p = {};
+    for (const id of PARAM_IDS) p[id] = num(id);
+    p.flat = $('#flat').checked;
+    return p;
+}
+function applyPreset(key) {
+    const pr = PRESETS[key];
+    if (!pr || key === 'custom') return;
+    const full = { ...PRESET_DEFAULTS, ...pr };
+    for (const id of PARAM_IDS) if (full[id] !== undefined) $('#' + id).value = full[id];
+    $('#flat').checked = !!full.flat;
+}
+function matchPreset() {
+    const p = readParams();
+    for (const [k, pr] of Object.entries(PRESETS)) {
+        if (k === 'custom') continue;
+        const full = { ...PRESET_DEFAULTS, ...pr };
+        const same = PARAM_IDS.every(id => id === 'Ode' && full.flat ? true : Math.abs(full[id] - p[id]) < 1e-9) && !!full.flat === p.flat;
+        if (same) return k;
+    }
+    return 'custom';
+}
+
+function validate(p) {
+    const bad = [];
+    if (!(p.H0 > 0)) bad.push('H₀ must be positive. A contracting universe is a different web page.');
+    for (const id of PARAM_IDS) if (!Number.isFinite(p[id])) bad.push(`${id} is not a number.`);
+    if (p.Om < 0) bad.push('Negative matter density. Exotic. No.');
+    if (p.Tcmb < 0) bad.push('Negative temperature. Not today.');
+    return bad;
+}
+
+function computeCalc() {
+    const t0ms = performance.now();
+    const p = readParams();
+    const warn = $('#calc-warn');
+    const bad = validate(p);
+    $('#Ode').disabled = p.flat;
+    setChip($('#h0-chip'), p.H0);
+    $('#h0-conv').textContent = unitSys === 'cosmo' || !(p.H0 > 0) ? '' : '= ' + U('H', p.H0 * 1e3 / PHYS.Mpc, 4);
+    if (bad.length) { warn.innerHTML = bad.join('<br>'); return; }
+    const c = makeCosmo(p);
+    cosmo = c;
+    if (p.flat) $('#Ode').value = +c.Ode.toFixed(6);
+    $('#calc-model').textContent = c.lcdm ? (Math.abs(c.Ok) < 1e-6 ? 'flat ΛCDM' : (c.Ok > 0 ? 'open ΛCDM' : 'closed ΛCDM')) : 'w₀wₐCDM';
+
+    // the strange universes
+    const msgs = [];
+    if (c.noBigBang) {
+        msgs.push('This universe has no Big Bang: H² becomes negative in the past, so it bounced. Distances and ages are undefined. Lower Ω<sub>Λ</sub> to get a beginning.');
+        if (userTouched) once('nobb', 'No Big Bang in this universe: it contracted, bounced and expanded again. Lemaître would like his singularity back.', 'Cosmology');
+    }
+    if (c.crunch) {
+        msgs.push(`This universe stops expanding at a ≈ ${fmt(c.aMax, 3)} and recollapses into a Big Crunch.`);
+        if (userTouched) once('crunch', 'This universe recollapses. Big Crunch ahead. No need to worry about retirement savings.', 'Cosmology');
+    }
+    if (c.steady) {
+        msgs.push('No matter, no radiation, only Λ: a de Sitter universe with no beginning. The age is infinite.');
+        if (userTouched) once('steady', 'A universe with no beginning and a constant H. Fred Hoyle would have loved this. The CMB would like a word.', 'Steady state');
+    }
+    if (Number.isFinite(c.rip) && userTouched) once('rip', `Phantom dark energy (w < −1). Galaxies, stars, planets and eventually atoms get torn apart in a Big Rip, about ${fmt(c.rip, 3)} Gyr from now. Finish your coffee.`, 'Big Rip');
+    warn.innerHTML = msgs.join('<br>');
+    if (c.noBigBang) { $('#calc-res').innerHTML = ''; $('#dist-chart').innerHTML = ''; return; }
+
+    // input -> z
+    const kind = $('#solve-kind').value, val = solveToInternal(kind, num('solve-val'));
+    let z = val, extra = '';
+    if (kind !== 'z') {
+        const s = solveZ(c, kind, val);
+        z = s.z;
+        if (kind === 'DA' && Number.isFinite(s.peak)) {
+            extra = Number.isFinite(s.z2)
+                ? `D_A is not monotonic. The second solution is at z = ${fmt(s.z2, 5)}.`
+                : '';
+            if (!Number.isFinite(z)) extra = `No solution: D_A peaks at ${fmt(s.peak, 5)} Mpc (z = ${fmt(s.zPeak, 4)}). Nothing in this universe looks smaller than that, at any distance.`;
+        } else if (!Number.isFinite(z)) {
+            extra = kind === 'age' ? 'No solution. That is older than this universe. Bold.'
+                : kind === 'lookback' ? 'No solution. You are looking back past the Big Bang.'
+                : 'No solution in 0 ≤ z ≤ 10⁵.';
+        }
+    }
+    if (extra) warn.innerHTML += (warn.innerHTML ? '<br>' : '') + extra;
+    if (!(z >= 0)) {
+        if (kind === 'z') warn.innerHTML += (warn.innerHTML ? '<br>' : '') + 'z must be ≥ 0 here. For blueshifts use the redshift window.';
+        $('#calc-res').innerHTML = '';
+        drawDistChart(c, NaN);
+        return;
+    }
+
+    const t0 = c.age(0), tz = c.age(z), lb = c.lookback(z);
+    const DC = c.DC(z), DM = c.DM(z), DA = DM / (1 + z), DL = DM * (1 + z);
+    const Hz = c.H0 * c.E(1 / (1 + z));
+    const arcsec = Math.PI / 180 / 3600;
+    const rhoz = c.rhoCrit0 * c.E2(1 / (1 + z));
+    const zEq = c.Or > 0 ? c.Om / c.Or - 1 : NaN;
+    const q0 = c.q(1);
+    let zAcc = NaN;
+    if (q0 < 0 && c.q(1 / 51) > 0) zAcc = bisect(zz => c.q(1 / (1 + zz)), 0, 50);
+    let zDE = NaN;
+    if (c.Ode > c.Om) zDE = bisect(zz => c.Om * (1 + zz) ** 3 - c.Ode * c.fde(1 / (1 + zz)), 0, 50);
+    const partH = c.Om + c.Or > 0 ? c.DH * c.transverse(c.chi(1e9)) : Infinity;
+    let eventH = NaN;
+    if (!c.crunch && c.Ode > 0 && c.q(1e3) < 0) {
+        eventH = c.DH * simpson(u => { const a = Math.exp(u); return 1 / (a * c.E(a)); }, 0, 40, 4000);
+    }
+    const Gly = PHYS.Mpc / PHYS.ly / 1e9;      // Mpc -> Gly
+    const ly = v => fmt(v * Gly, 4) + ' Gly';
+    const G = PHYS.Gyr, M = PHYS.Mpc;
+    // one row of a dimensional quantity: SI in, chosen units out
+    const q = (label, kind, si, cosmoAlt = '', extra = {}) => ({
+        label, v: U(kind, si, kind === 'dist' ? 6 : 5), alt: altOr(kind, si, cosmoAlt),
+        copy: [Uval(kind, si), unitOf(kind).name], ...extra
+    });
+    const zEv = Number.isFinite(eventH) ? solveZ(c, 'DC', eventH).z : NaN;
+    const arcU = DXX => {           // physical size per arcsec, in the "small" unit
+        const si = DXX * M * arcsec;
+        return { label: '', v: U('small', si, 4) + '/″', alt: unitSys === 'cosmo' ? fmt(1 / (DXX * 1e3 * arcsec), 4) + ' ″/kpc' : Uc('small', si, 4) + '/″', copy: [Uval('small', si), unitOf('small').name + '/arcsec'] };
+    };
+
+    const rows = [
+        { sec: 'Universe today' },
+        q('Age t₀', 'time', t0 * G),
+        q('Hubble time 1/H₀', 'time', c.tH * G),
+        q('Hubble distance c/H₀', 'dist', c.DH * M, ly(c.DH)),
+        { label: 'Ω<sub>k</sub>, Ω<sub>r</sub>', v: fmt(c.Ok, 3) + ', ' + fmt(c.Or, 3), alt: 'Ω<sub>Λ</sub> = ' + fmt(c.Ode, 4), copy: [c.Ok, ''] },
+        { label: 'Deceleration q₀', v: fmt(q0, 4), alt: Number.isFinite(zAcc) ? 'accelerating since z = ' + fmt(zAcc, 3) : (q0 < 0 ? '' : 'decelerating'), copy: [q0, ''] },
+        { label: 'Matter–DE equality', v: Number.isFinite(zDE) ? 'z = ' + fmt(zDE, 3) : '—', alt: 'matter–radiation: z = ' + fmt(zEq, 4), copy: [zDE, ''] },
+        q('Particle horizon (comoving)', 'dist', partH * M, ly(partH)),
+        Number.isFinite(eventH)
+            ? q('Event horizon (comoving)', 'dist', eventH * M, 'never reachable beyond z ≈ ' + fmt(zEv, 3))
+            : { label: 'Event horizon (comoving)', v: 'none', copy: [NaN, ''] },
+    ];
+    if (Number.isFinite(c.rip)) rows.push(q('Big Rip in', 'time', c.rip * G, 'Caldwell et al. 2003', { hl: true }));
+    const lbDist = lb * G * PHYS.c;
+    rows.push(
+        { sec: `At z = ${fmt(z, 6)}` },
+        { label: 'Scale factor a', v: fmt(1 / (1 + z), 5), copy: [1 / (1 + z), ''] },
+        q('Lookback time', 'time', lb * G, 'light-travel distance ' + fmt(lbDist / PHYS.ly * 1e-9, 4) + ' Gly'),
+        unitSys === 'cosmo' && tz < 0.01
+            ? { label: 'Age at z', v: fmt(tz * 1e6, 5) + ' kyr', copy: [tz, 'Gyr'] }
+            : q('Age at z', 'time', tz * G),
+        q('Comoving distance D<sub>C</sub>', 'dist', DC * M, ly(DC)),
+    );
+    if (Math.abs(c.Ok) > 1e-6) rows.push(q('Transverse comoving D<sub>M</sub>', 'dist', DM * M, ly(DM)));
+    rows.push(
+        q('Angular diameter D<sub>A</sub>', 'dist', DA * M, ly(DA)),
+        q('Luminosity distance D<sub>L</sub>', 'dist', DL * M, ly(DL)),
+        { label: 'Distance modulus μ', v: z > 0 ? fmt(c.mu(z), 5) + ' mag' : '—', copy: [z > 0 ? c.mu(z) : NaN, 'mag'] },
+        { ...arcU(DA), label: 'Scale (proper)' },
+        { ...arcU(DM), label: 'Scale (comoving)' },
+        q('Comoving volume V<sub>C</sub>', 'vol', c.Vc(z) * M ** 3, 'all-sky, out to z'),
+        q('H(z)', 'H', Hz * 1e3 / M),
+        { label: 'Ω<sub>m</sub>(z)', v: fmt(c.Om * (1 + z) ** 3 / c.E2(1 / (1 + z)), 4), copy: [c.Om * (1 + z) ** 3 / c.E2(1 / (1 + z)), ''] },
+        q('ρ<sub>crit</sub>(z)', 'dens', rhoz, fmt(rhoz * 1e-3, 4) + ' g/cm³'),
+        q('T<sub>CMB</sub>(z)', 'temp', p.Tcmb * (1 + z)),
+    );
+    $('#calc-res').innerHTML = rowsHTML(rows);
+    lastState = { rows, z };
+
+    drawDistChart(c, z);
+    const ms = performance.now() - t0ms;
+    $('#calc-status').textContent = `Computed in ${ms.toFixed(1)} ms. The universe needed ${U('time', t0 * PHYS.Gyr, 4)}.`;
+
+    // remarks
+    if (userTouched) {
+        teamRemark(p.H0);
+        if (Math.abs(p.H0 - 500) < 1e-9) once('hubble29', `H₀ = 500 km/s/Mpc: Hubble's 1929 value. The universe would be ${fmt(t0, 2)} Gyr old, which is younger than the Earth (4.54 Gyr). The geologists noticed.`, 'Historical note');
+        if (Math.abs(p.H0 - 42) < 1e-9) once('42', 'H₀ = 42. The answer is right, but nobody remembers the question.', 'Note');
+        if (Math.abs(z - 42) < 1e-9) once('z42', `z = 42: the age at emission was ${fmt(tz * 1e3, 3)} Myr. Possibly the first stars. Definitely the answer.`, 'Note');
+        if (z >= 1089) once('lss', `Past z ≈ 1090 the universe is opaque. You are computing the distance to a wall. A very warm, ${fmt(p.Tcmb * (1 + z), 4)} K wall.`, 'Last scattering');
+        const pk = matchPreset();
+        if (pk === 'eds') once('eds', 'Einstein–de Sitter: the 1932 default universe. Simple and elegant, and the age comes out too young.', 'Historical note');
+        if (pk === 'milne') once('milne', 'An empty universe. Perfectly tidy, but there is nobody in it to measure anything.', 'Note');
+    }
+    writeHash(p, kind, val);
+    updateLensing();
+    updateHubbleConv(false);
+}
+
+/* chi and lookback on an ascending z grid, integrated segment by segment instead of from scratch */
+function cumulative(c, zs) {
+    const chi = [], lb = [];
+    let x = c.chi(zs[0]), t = c.lookback(zs[0]) / c.tH;
+    for (let i = 0; i < zs.length; i++) {
+        if (i > 0) {
+            const u1 = -Math.log1p(zs[i]), u0 = -Math.log1p(zs[i - 1]);
+            x += simpson(u => { const a = Math.exp(u); return 1 / (a * c.E(a)); }, u1, u0, 16);
+            t += simpson(u => 1 / c.E(Math.exp(u)), u1, u0, 16);
+        }
+        chi.push(x); lb.push(t * c.tH);
+    }
+    return { chi, lb };
+}
+function drawDistChart(c, zMark) {
+    const mode = $('#dist-mode').value;
+    const zs = [];
+    for (let i = 0; i <= 220; i++) zs.push(10 ** (-2 + 5 * i / 220));
+    const host = $('#dist-chart');
+    const cum = cumulative(c, zs);
+    if (mode === 'dist') {
+        const du = unitOf('dist'), k = PHYS.Mpc / du.f;      // Mpc -> chosen unit
+        const DM = cum.chi.map(x => k * c.DH * c.transverse(x));
+        const S = [
+            { name: 'Comoving D_C', short: 'D_C', color: 'var(--s1)', vals: cum.chi.map(x => k * c.DH * x) },
+            { name: 'Angular diameter D_A', short: 'D_A', color: 'var(--s2)', vals: DM.map((d, i) => d / (1 + zs[i])) },
+            { name: 'Luminosity D_L', short: 'D_L', color: 'var(--s3)', vals: DM.map((d, i) => d * (1 + zs[i])) },
+        ];
+        legend($('#dist-legend'), S);
+        // D_A turnover
+        let ip = 0;
+        S[1].vals.forEach((v, i) => { if (v > S[1].vals[ip]) ip = i; });
+        const all = S.flatMap(s => s.vals).filter(v => v > 0);
+        const yLo = 10 ** Math.floor(Math.log10(Math.min(...all))), yHi = 10 ** Math.ceil(Math.log10(Math.max(...all)));
+        drawChart(host, {
+            title: 'Cosmological distances versus redshift',
+            x: [0.01, 1000], y: [yLo, yHi], xLog: true, yLog: true, xLabel: 'redshift z', yLabel: du.name,
+            series: S.map(s => ({ color: s.color, label: s.short, pts: zs.map((z, i) => [z, s.vals[i]]) })),
+            vlines: Number.isFinite(zMark) ? [{ x: zMark, label: 'z = ' + fmt(zMark, 3) }] : [],
+            marks: ip > 0 && ip < zs.length - 1 ? [{ x: zs[ip], y: S[1].vals[ip], label: `D_A peaks at z ≈ ${fmt(zs[ip], 2)}: beyond that, things look bigger` }] : [],
+            hover: { xs: zs, rows: i => ({ title: 'z = ' + fmt(zs[i], 4), rows: S.map(s => ({ name: s.short, color: s.color, y: s.vals[i], text: fmt(s.vals[i], 4) + ' ' + du.name })) }) }
+        });
+    } else {
+        const tu = unitOf('time'), k = PHYS.Gyr / tu.f;      // Gyr -> chosen unit
+        const t0 = c.age(0) * k;
+        const S = [
+            { name: 'Lookback time', short: 'lookback', color: 'var(--s1)', vals: cum.lb.map(v => v * k) },
+            { name: 'Age at z', short: 'age', color: 'var(--s2)', vals: null },
+        ];
+        S[1].vals = S[0].vals.map(v => t0 - v);
+        legend($('#dist-legend'), S);
+        drawChart(host, {
+            title: 'Lookback time and age versus redshift',
+            x: [0.01, 1000], y: [0, Number.isFinite(t0) ? t0 * 1.06 : 20], xLog: true, xLabel: 'redshift z', yLabel: tu.name,
+            series: S.map(s => ({ color: s.color, label: s.short, pts: zs.map((z, i) => [z, s.vals[i]]) })),
+            vlines: Number.isFinite(zMark) ? [{ x: zMark, label: 'z = ' + fmt(zMark, 3) }] : [],
+            hover: { xs: zs, rows: i => ({ title: 'z = ' + fmt(zs[i], 4), rows: S.map(s => ({ name: s.short, color: s.color, y: s.vals[i], text: fmt(s.vals[i], 4) + ' ' + tu.name })) }) }
+        });
+    }
+}
+
+/* shareable links: everything lives in the url hash */
+function writeHash(p, kind, val) {
+    const q = new URLSearchParams();
+    for (const id of PARAM_IDS) if (!(p.flat && id === 'Ode')) q.set(id, p[id]);
+    q.set('flat', p.flat ? 1 : 0);
+    q.set(kind, val);
+    try { history.replaceState(null, '', '#' + q.toString()); } catch {}
+}
+function readHash() {
+    if (location.hash.length < 3 || !location.hash.includes('=')) return;
+    const q = new URLSearchParams(location.hash.slice(1));
+    for (const id of PARAM_IDS) if (q.has(id) && Number.isFinite(+q.get(id))) $('#' + id).value = q.get(id);
+    if (q.has('flat')) $('#flat').checked = q.get('flat') === '1';
+    for (const o of $('#solve-kind').options) if (q.has(o.value)) { $('#solve-kind').value = o.value; $('#solve-val').value = q.get(o.value); }
+    presetSel.value = matchPreset();
+}
+
+presetSel.addEventListener('change', () => { userTouched = true; applyPreset(presetSel.value); computeCalc(); });
+for (const id of [...PARAM_IDS, 'flat']) {
+    $('#' + id).addEventListener('input', () => { userTouched = true; presetSel.value = matchPreset(); computeCalc(); });
+}
+$('#solve-kind').addEventListener('change', () => {
+    userTouched = true;
+    // keep the same object, express it in the new quantity
+    const k = $('#solve-kind').value, z = lastState.z;
+    if (cosmo && Number.isFinite(z)) {
+        const v = { z, lookback: cosmo.lookback(z), age: cosmo.age(z), DC: cosmo.DC(z), DL: cosmo.DL(z), DA: cosmo.DA(z), mu: z > 0 ? cosmo.mu(z) : 30 }[k];
+        $('#solve-val').value = +solveFromInternal(k, v).toPrecision(6);
+    }
+    computeCalc();
+});
+$('#solve-val').addEventListener('input', () => { userTouched = true; computeCalc(); });
+$('#dist-mode').addEventListener('change', () => cosmo && drawDistChart(cosmo, lastState.z));
+$('#copy-res').addEventListener('click', () => {
+    if (!lastState.rows) return;
+    const p = readParams();
+    const head = `# Cosmology Toolbox  units: ${UNIT_SYSTEMS[unitSys].label}  H0=${p.H0} Om=${p.Om} OL=${plain(cosmo.Ode)} Ob=${p.Ob} w0=${p.w0} wa=${p.wa} Tcmb=${p.Tcmb} Neff=${p.Neff}\n`;
+    const body = lastState.rows.filter(r => r.copy).map(r =>
+        `${r.label.replace(/<[^>]+>/g, '')}\t${plain(r.copy[0])}\t${r.copy[1]}`).join('\n');
+    copyText(head + body, $('#calc-status'), 'results as tab-separated text');
+});
+$('#copy-link').addEventListener('click', () => copyText(location.href, $('#calc-status'), 'a link to these parameters'));
+
+/* =====================================================================
+   lensing
+   ===================================================================== */
+function updateLensing() {
+    const c = cosmo; if (!c || c.noBigBang) return;
+    const zl = num('zl'), zs = num('zs'), sig = toSI('vel', num('sigv')) / 1e3, M = toSI('mass', num('mlens')) / PHYS.Msun;   // km/s, Msun
+    const warn = $('#lens-warn');
+    if (!(zl > 0 && zs > zl)) {
+        warn.textContent = 'Need 0 < z_lens < z_source. The source goes behind the lens, as a rule.';
+        $('#lens-res').innerHTML = '';
+        return;
+    }
+    warn.textContent = '';
+    const Dd = c.DA(zl), Ds = c.DA(zs), Dds = c.DA12(zl, zs);
+    const Ddt = (1 + zl) * Dd * Ds / Dds;
+    const m2 = PHYS.Mpc;
+    const SigCr = PHYS.c ** 2 / (4 * Math.PI * PHYS.G) * Ds / (Dd * Dds) / m2;    // kg/m^2
+    const SigCrSun = SigCr * PHYS.pc ** 2 / PHYS.Msun;
+    const rad2as = 180 / Math.PI * 3600;
+    const thSIS = 4 * Math.PI * (sig / C_KMS) ** 2 * Dds / Ds * rad2as;
+    const thPt = Math.sqrt(4 * PHYS.G * M * PHYS.Msun / PHYS.c ** 2 * Dds / (Dd * Ds * m2)) * rad2as;
+    // time-delay scale: D_dt/c * (1 arcsec)^2, in days
+    const tScale = Ddt * m2 / PHYS.c * (1 / rad2as) ** 2 / 86400;
+    const Mpc = PHYS.Mpc, d = (label, si, alt) => ({ label, v: U('dist', si, 6), alt: altOr('dist', si, alt) });
+    const atLens = th => th / rad2as * Dd * Mpc;      // physical size at the lens, m
+    const rows = [
+        d('D<sub>d</sub> (observer–lens)', Dd * Mpc),
+        d('D<sub>s</sub> (observer–source)', Ds * Mpc),
+        d('D<sub>ds</sub> (lens–source)', Dds * Mpc, 'D_ds/D_s = ' + fmt(Dds / Ds, 4)),
+        d('Time-delay distance D<sub>Δt</sub>', Ddt * Mpc, '(1+z_d) D_d D_s / D_ds'),
+        { label: 'Time-delay scale', v: U('short', tScale * 86400, 4), alt: altOr('short', tScale * 86400, 'D_Δt/c × (1″)²') },
+        { label: 'Σ<sub>crit</sub>', v: U('surf', SigCr, 4), alt: altOr('surf', SigCr, fmt(SigCr, 4) + ' kg/m²') },
+        { label: 'θ<sub>E</sub> (SIS, σ<sub>v</sub>)', v: fmt(thSIS, 4) + '″', alt: U('small', atLens(thSIS), 4) + ' at lens' },
+        { label: 'θ<sub>E</sub> (point mass M)', v: fmt(thPt, 4) + '″', alt: U('small', atLens(thPt), 4) + ' at lens' },
+        { label: 'Lens scale', v: U('small', atLens(1), 4) + '/″', alt: altOr('small', atLens(1)) },
+    ];
+    $('#lens-res').innerHTML = rowsHTML(rows);
+    $('#lens-status').textContent = `H₀ = ${fmt(c.H0, 5)}. D_Δt ∝ 1/H₀, which is why lensers argue about it.`;
+}
+for (const id of ['zl', 'zs', 'sigv', 'mlens']) $('#' + id).addEventListener('input', updateLensing);
+
+/* =====================================================================
+   hubble tension + conversions + fit
+   ===================================================================== */
+function fillSel(sel, defIdx) {
+    const ge = document.createElement('optgroup'); ge.label = 'Early universe';
+    H0_EARLY.forEach((m, i) => ge.appendChild(new Option(`${m.name}: ${m.v} ± ${m.e}`, 'E' + i)));
+    const gl = document.createElement('optgroup'); gl.label = 'Late universe';
+    H0_LATE.forEach((m, i) => gl.appendChild(new Option(`${m.name}: ${m.v} ± ${m.e}`, 'L' + i)));
+    sel.append(ge, gl, new Option('Custom', 'custom'));
+    sel.value = defIdx;
+}
+fillSel($('#ta-sel'), 'E0');
+fillSel($('#tb-sel'), 'L0');
+const pickM = v => v[0] === 'E' ? H0_EARLY[+v.slice(1)] : v[0] === 'L' ? H0_LATE[+v.slice(1)] : null;
+function syncSel(which) {
+    const m = pickM($(`#t${which}-sel`).value);
+    if (m) { $(`#t${which}-v`).value = m.v; $(`#t${which}-e`).value = m.e; }
+}
+syncSel('a'); syncSel('b');
+
+const hU = (kms, sig) => U('H', kms * 1e3 / PHYS.Mpc, sig);     // km/s/Mpc -> chosen units
+function updateTension() {
+    const a = { v: num('ta-v'), e: num('ta-e') }, b = { v: num('tb-v'), e: num('tb-e') };
+    const mine = num('mine');
+    $('#mine-v').textContent = mine.toFixed(2);
+    $('#mine-u').textContent = unitSys === 'cosmo' ? '' : '= ' + hU(mine, 4);
+    setChip($('#mine-chip'), mine);
+    if (!(a.e > 0 && b.e > 0) || !Number.isFinite(a.v + b.v)) { $('#tension-res').innerHTML = ''; return; }
+    const ma = pickM($('#ta-sel').value), mb = pickM($('#tb-sel').value);
+    const nameA = ma ? ma.name : 'A (custom)', nameB = mb ? mb.name : 'B (custom)';
+    const d = b.v - a.v, s = Math.hypot(a.e, b.e), n = Math.abs(d) / s, pv = erfc(n / Math.SQRT2);
+    const w1 = 1 / a.e ** 2, w2 = 1 / b.e ** 2, comb = (a.v * w1 + b.v * w2) / (w1 + w2), combE = 1 / Math.sqrt(w1 + w2);
+    const verdict = n < 1 ? 'Consistent. Unexciting, but correct.' : n < 2 ? 'Mild. Probably nothing.' : n < 3 ? 'Tension. Write a paper.' : n < 5 ? 'Serious tension. Write several papers.' : 'Crisis. Write a review of the papers.';
+    const rows = [
+        { label: 'Difference B − A', v: hU(d, 4), alt: unitSys === 'cosmo' ? fmt(100 * d / a.v, 3) + ' %' : fmt(d, 4) + ' km/s/Mpc, ' + fmt(100 * d / a.v, 3) + ' %' },
+        { label: 'Combined σ', v: hU(s, 3), alt: unitSys === 'cosmo' ? '' : fmt(s, 3) + ' km/s/Mpc' },
+        { label: 'Tension', v: fmt(n, 3) + ' σ', hl: n >= 3 },
+        { label: 'Two-sided p-value', v: fmt(pv, 3), alt: pv < 1e-3 ? '1 in ' + fmt(1 / pv, 3) : '' },
+        { label: 'Verdict', v: verdict },
+        { label: 'Inverse-variance mean', v: unitSys === 'cosmo' ? fmt(comb, 5) + ' ± ' + fmt(combE, 2) : hU(comb, 5), alt: n > 3 ? "please don't" : (unitSys === 'cosmo' ? '' : fmt(comb, 5) + ' ± ' + fmt(combE, 2) + ' km/s/Mpc') },
+        { label: 'Your H₀ vs. A, B', v: fmt(Math.abs(mine - a.v) / a.e, 3) + ' σ, ' + fmt(Math.abs(mine - b.v) / b.e, 3) + ' σ' },
+    ];
+    $('#tension-res').innerHTML = rowsHTML(rows);
+    const xs = [];
+    for (let x = 60; x <= 80.0001; x += 0.05) xs.push(+x.toFixed(2));
+    const g = (x, m) => Math.exp(-0.5 * ((x - m.v) / m.e) ** 2) / (m.e * Math.sqrt(2 * Math.PI));
+    const ya = xs.map(x => g(x, a)), yb = xs.map(x => g(x, b));
+    const ymax = Math.max(...ya, ...yb) * 1.1;
+    const S = [{ name: nameA, color: 'var(--s1)' }, { name: nameB, color: 'var(--s2)' }];
+    legend($('#tension-legend'), S);
+    drawChart($('#tension-chart'), {
+        title: 'Two H0 measurements as Gaussians', height: 230,
+        x: [60, 80], y: [0, ymax], xLabel: 'H₀ [km/s/Mpc]', yLabel: 'probability density',
+        series: [{ color: S[0].color, pts: xs.map((x, i) => [x, ya[i]]) }, { color: S[1].color, pts: xs.map((x, i) => [x, yb[i]]) }],
+        vlines: [{ x: mine, label: 'you' }],
+        hover: { xs, rows: i => ({ title: 'H₀ = ' + xs[i].toFixed(2), rows: [
+            { name: 'A', color: S[0].color, y: ya[i], text: fmt(Math.abs(xs[i] - a.v) / a.e, 3) + ' σ away' },
+            { name: 'B', color: S[1].color, y: yb[i], text: fmt(Math.abs(xs[i] - b.v) / b.e, 3) + ' σ away' }] }) }
+    });
+    $('#hub-status').textContent = `Tension: ${fmt(n, 3)}σ. Feelings not included.`;
+}
+for (const w of ['a', 'b']) {
+    $(`#t${w}-sel`).addEventListener('change', () => { syncSel(w); updateTension(); });
+    for (const f of ['v', 'e']) $(`#t${w}-${f}`).addEventListener('input', () => { $(`#t${w}-sel`).value = 'custom'; updateTension(); });
+}
+$('#mine').addEventListener('input', () => { userTouched = true; updateTension(); teamRemark(+(+$('#mine').value).toFixed(2)); });
+
+let convFrom = 'd';
+function updateHubbleConv(fromUser = true) {
+    const H0 = num('hc-H0');
+    if (!(H0 > 0)) { $('#hc-res').innerHTML = ''; return; }
+    let dMpc = toSI('dist', num('hc-d')) / PHYS.Mpc, vkms = toSI('vel', num('hc-v')) / 1e3;
+    if (convFrom === 'd') { vkms = H0 * dMpc; $('#hc-v').value = +Uval('vel', vkms * 1e3).toPrecision(6); }
+    else { dMpc = vkms / H0; $('#hc-d').value = +Uval('dist', dMpc * PHYS.Mpc).toPrecision(6); }
+    const H0s = H0 * 1e3 / PHYS.Mpc;
+    const rho = 3 * H0s ** 2 / (8 * Math.PI * PHYS.G);
+    const rows = [
+        { label: 'h', v: fmt(H0 / 100, 5) },
+        { label: 'H₀', v: fmt(H0s, 5) + ' s⁻¹', alt: fmt(H0s * PHYS.Gyr, 5) + ' Gyr⁻¹' },
+    ];
+    if (unitSys !== 'cosmo') rows.push({ label: 'H₀ in ' + esc(UNIT_SYSTEMS[unitSys].label.split(' (')[0]) + ' units', v: U('H', H0s), hl: true });
+    rows.push(
+        { label: 'Hubble time 1/H₀', v: U('time', 1 / H0s), alt: altOr('time', 1 / H0s) },
+        { label: 'Hubble distance c/H₀', v: U('dist', PHYS.c / H0s), alt: altOr('dist', PHYS.c / H0s, fmt(C_KMS / H0 * PHYS.Mpc / PHYS.ly / 1e9, 4) + ' Gly') },
+        { label: 'ρ<sub>crit,0</sub>', v: U('dens', rho, 4), alt: altOr('dens', rho, fmt(rho * 1e-3, 4) + ' g/cm³') },
+        { label: 'z ≈ v/c', v: fmt(vkms / C_KMS, 4) },
+    );
+    $('#hc-res').innerHTML = rowsHTML(rows);
+    if (fromUser) { userTouched = true; teamRemark(H0); }
+}
+$('#hc-H0').addEventListener('input', () => updateHubbleConv());
+$('#hc-d').addEventListener('input', () => { convFrom = 'd'; updateHubbleConv(false); });
+$('#hc-v').addEventListener('input', () => { convFrom = 'v'; updateHubbleConv(false); });
+$('#hc-sync').addEventListener('click', () => { $('#hc-H0').value = num('H0'); updateHubbleConv(false); });
+
+function fitH0() {
+    const pts = $('#fit-data').value.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'))
+        .map(l => l.split(/[\s,;]+/).map(Number)).filter(a => a.length >= 2 && a.every(Number.isFinite));
+    if (pts.length < 2) { $('#fit-res').innerHTML = rowsHTML([{ label: 'Error', v: 'Need at least two data points.' }]); return; }
+    const weighted = pts.every(p => p.length >= 3 && p[2] > 0);
+    let Sdd = 0, Sdv = 0;
+    for (const [d, v, e] of pts) { const w = weighted ? 1 / e ** 2 : 1; Sdd += w * d * d; Sdv += w * d * v; }
+    const H = Sdv / Sdd;
+    let chi2 = 0;
+    for (const [d, v, e] of pts) chi2 += (v - H * d) ** 2 / (weighted ? e ** 2 : 1);
+    const dof = pts.length - 1;
+    const err = weighted ? 1 / Math.sqrt(Sdd) : Math.sqrt(chi2 / dof / Sdd);
+    const rows = [
+        unitSys === 'cosmo'
+            ? { label: 'H₀', v: fmt(H, 5) + ' ± ' + fmt(err, 2), alt: 'km/s/Mpc', hl: true }
+            : { label: 'H₀', v: hU(H, 5), alt: fmt(H, 5) + ' ± ' + fmt(err, 2) + ' km/s/Mpc', hl: true },
+        { label: 'Points', v: String(pts.length), alt: weighted ? 'weighted by 1/σ²' : 'unweighted, σ from scatter' },
+        { label: weighted ? 'χ² / dof' : 'rms residual', v: weighted ? fmt(chi2, 4) + ' / ' + dof : U('vel', Math.sqrt(chi2 / dof) * 1e3, 4) },
+        { label: '1/H₀', v: U('time', PHYS.Mpc / 1e3 / H, 4) },
+    ];
+    $('#fit-res').innerHTML = rowsHTML(rows);
+    if (!userTouched) return;
+    if (H > 300) once('fit-hubble', 'That slope is Hubble-1929 territory. Check your distance calibration. Hubble had to check his.', 'Historical note');
+    else teamRemark(+H.toFixed(2));
+}
+$('#fit-btn').addEventListener('click', () => { userTouched = true; fitH0(); });
+
+/* =====================================================================
+   cmb: toy spectrum + gaussian random field on a flat patch
+   ===================================================================== */
+function cmbDerived(c) {
+    const h = c.h, obh2 = c.Ob * h * h, omh2 = c.Om * h * h;
+    // Hu & Sugiyama (1996) for z*, Eisenstein & Hu (1998) for z_drag
+    const g1 = 0.0783 * obh2 ** -0.238 / (1 + 39.5 * obh2 ** 0.763), g2 = 0.560 / (1 + 21.1 * obh2 ** 1.81);
+    const zstar = 1048 * (1 + 0.00124 * obh2 ** -0.738) * (1 + g1 * omh2 ** g2);
+    // drag-epoch sound horizon: Aubourg et al. (2015) fit, massless neutrinos, ~0.1% vs CAMB
+    const rd = 55.154 * Math.exp(-72.3 * 0.0006 ** 2) / (omh2 ** 0.25351 * obh2 ** 0.12807);
+    const Rfac = 3 * c.Ob / (4 * c.Og);
+    const rs = z => c.DH * simpson(a => 1 / Math.sqrt(3 * (1 + Rfac * a)) /
+        Math.sqrt(c.Or + c.Om * a + c.Ok * a * a + c.Ode * c.fde(a) * a ** 4), 1e-12, 1 / (1 + z), 4000);
+    const rsStar = rs(zstar), DMstar = c.DM(zstar);
+    return {
+        zstar, rsStar, rd, DMstar,
+        theta: rsStar / DMstar, lA: Math.PI * DMstar / rsStar,
+        Rstar: Rfac / (1 + zstar), ageStar: c.age(zstar), omh2, obh2
+    };
+}
+function rawDl(d) {
+    const R = d.Rstar, lA = d.lA;
+    const lD = 602 * (lA / 301.7) * (d.obh2 / 0.02237) ** 0.25;
+    const beta = 2.25 * Math.sqrt(0.1430 / d.omh2);
+    const lc = 120 * lA / 301.7;
+    return l => {
+        const x = Math.PI * (l / lA + 0.27);
+        const M = Math.cos(x) - 0.31 * R;
+        const D = Math.sin(x) / Math.sqrt(1 + R);
+        return (M * M + 0.64 * D * D) * (1 + beta * l * l / (l * l + lc * lc)) * Math.exp(-((l / lD) ** 0.8));
+    };
+}
+const DL_NORM = (() => {
+    const ref = makeCosmo({ ...PRESET_DEFAULTS, ...PRESETS.planck18 });
+    const f = rawDl(cmbDerived(ref));
+    let mx = 0;
+    for (let l = 100; l <= 320; l++) mx = Math.max(mx, f(l));
+    return 5720 / mx;        // first peak of the planck best fit, in muK^2
+})();
+function makeDl(d, As, ns, tau) {
+    const f = rawDl(d);
+    const dtau = tau - 0.0544;
+    return l => DL_NORM * (As / 2.1) * (l / 500) ** (ns - 0.9649) * Math.exp(-2 * dtau * l * l / (l * l + 400)) * f(l);
+}
+
+function hashStr(str) {
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    return h1 >>> 0;
+}
+function mulberry32(a) {
+    return () => {
+        a |= 0; a = a + 0x6D2B79F5 | 0;
+        let t = Math.imul(a ^ a >>> 15, 1 | a);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+}
+function fft(re, im, inverse) {
+    const n = re.length;
+    for (let i = 1, j = 0; i < n; i++) {
+        let bit = n >> 1;
+        for (; j & bit; bit >>= 1) j ^= bit;
+        j ^= bit;
+        if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+    }
+    for (let len = 2; len <= n; len <<= 1) {
+        const ang = 2 * Math.PI / len * (inverse ? 1 : -1), wr = Math.cos(ang), wi = Math.sin(ang), half = len >> 1;
+        for (let i = 0; i < n; i += len) {
+            let cr = 1, ci = 0;
+            for (let k = 0; k < half; k++) {
+                const p = i + k, q = p + half;
+                const vr = re[q] * cr - im[q] * ci, vi = re[q] * ci + im[q] * cr;
+                re[q] = re[p] - vr; im[q] = im[p] - vi;
+                re[p] += vr; im[p] += vi;
+                const t = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = t;
+            }
+        }
+    }
+}
+function fft2(re, im, N, inverse) {
+    for (let y = 0; y < N; y++) fft(re.subarray(y * N, y * N + N), im.subarray(y * N, y * N + N), inverse);
+    const cr = new Float64Array(N), ci = new Float64Array(N);
+    for (let x = 0; x < N; x++) {
+        for (let y = 0; y < N; y++) { cr[y] = re[y * N + x]; ci[y] = im[y * N + x]; }
+        fft(cr, ci, inverse);
+        for (let y = 0; y < N; y++) { re[y * N + x] = cr[y]; im[y * N + x] = ci[y]; }
+    }
+    if (inverse) { const s = 1 / (N * N); for (let i = 0; i < N * N; i++) { re[i] *= s; im[i] *= s; } }
+}
+// planck-ish diverging map: deep blue -> pale -> deep red
+const CMAP = [[0, [12, 30, 120]], [0.18, [30, 100, 220]], [0.35, [110, 180, 240]], [0.5, [246, 238, 222]], [0.65, [250, 175, 70]], [0.82, [225, 80, 30]], [1, [110, 15, 15]]];
+function cmap(t) {
+    t = Math.min(1, Math.max(0, t));
+    for (let i = 1; i < CMAP.length; i++) {
+        if (t <= CMAP[i][0]) {
+            const [t0, c0] = CMAP[i - 1], [t1, c1] = CMAP[i], f = (t - t0) / (t1 - t0);
+            return [0, 1, 2].map(k => c0[k] + f * (c1[k] - c0[k]));
+        }
+    }
+    return CMAP[CMAP.length - 1][1];
+}
+function boxBlur(a, N, r) {
+    const tmp = new Float64Array(N * N);
+    for (let pass = 0; pass < 2; pass++) {
+        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+            let s = 0, n = 0;
+            for (let k = -r; k <= r; k++) { const xx = x + k; if (xx >= 0 && xx < N) { s += a[y * N + xx]; n++; } }
+            tmp[y * N + x] = s / n;
+        }
+        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+            let s = 0, n = 0;
+            for (let k = -r; k <= r; k++) { const yy = y + k; if (yy >= 0 && yy < N) { s += tmp[yy * N + x]; n++; } }
+            a[y * N + x] = s / n;
+        }
+    }
+}
+
+const CMB = { N: 256, map: null };
+function simulateCMB() {
+    const t0ms = performance.now();
+    const c = cosmo;
+    const status = $('#cmb-status');
+    if (!c || c.noBigBang || c.steady) { status.textContent = 'This universe has no hot Big Bang, so it has no CMB. Fix the calculator first.'; return; }
+    if (!(c.p.Tcmb > 0) || !(c.Ob > 0) || !(c.Om > 0)) { status.textContent = 'The CMB needs T_CMB > 0, Ω_b > 0 and Ω_m > 0. No photons, no baryons, no peaks.'; return; }
+    if (c.Ob > c.Om) { status.textContent = 'Ω_b > Ω_m: more baryons than matter. Something has to give, and it is not going to be the simulator.'; return; }
+    const N = CMB.N, deg = num('cmb-size'), L = deg * Math.PI / 180, beam = num('cmb-beam');
+    const As = num('cmb-As'), ns = num('cmb-ns'), tau = num('cmb-tau');
+    const seedStr = $('#cmb-seed').value.trim();
+    const d = cmbDerived(c);
+    const Dl = makeDl(d, As, ns, tau);
+    const sb = beam / 60 * Math.PI / 180 / Math.sqrt(8 * Math.LN2);
+    const B2 = l => Math.exp(-l * (l + 1) * sb * sb);
+    const Cl = l => 2 * Math.PI * Dl(l) / (l * (l + 1));
+    const rnd = mulberry32(hashStr(seedStr.toLowerCase()));
+    const re = new Float64Array(N * N), im = new Float64Array(N * N);
+    for (let i = 0; i < N * N; i += 2) {
+        const u1 = rnd() || 1e-12, u2 = rnd(), r = Math.sqrt(-2 * Math.log(u1));
+        re[i] = r * Math.cos(2 * Math.PI * u2);
+        re[i + 1] = r * Math.sin(2 * Math.PI * u2);
+    }
+    fft2(re, im, N, false);
+    const omPix = (L / N) ** 2, lf = 2 * Math.PI / L, lNyq = lf * N / 2;
+    const binW = Math.max(lf * 2, 40), nb = Math.ceil(Math.min(lNyq, 2500) / binW);
+    const bs = new Float64Array(nb), bl = new Float64Array(nb), bn = new Float64Array(nb);
+    for (let ky = 0; ky < N; ky++) for (let kx = 0; kx < N; kx++) {
+        const i = ky * N + kx;
+        const fx = kx <= N / 2 ? kx : kx - N, fy = ky <= N / 2 ? ky : ky - N;
+        const l = lf * Math.hypot(fx, fy);
+        if (l < 2) { re[i] = 0; im[i] = 0; continue; }
+        const amp = Math.sqrt(Cl(l) * B2(l) / omPix);
+        re[i] *= amp; im[i] *= amp;
+        const b = Math.floor(l / binW);
+        if (b < nb && l <= lNyq) {
+            const Cest = (re[i] * re[i] + im[i] * im[i]) * omPix / (N * N);
+            bs[b] += Cest * l * (l + 1) / (2 * Math.PI); bl[b] += l; bn[b]++;
+        }
+    }
+    fft2(re, im, N, true);
+    const T = re;
+    let s2 = 0;
+    for (let i = 0; i < N * N; i++) s2 += T[i] * T[i];
+    let rms = Math.sqrt(s2 / (N * N));
+
+    // easter eggs, post-hoc and unphysical, which is the point
+    const seedL = seedStr.toLowerCase();
+    if (seedL === 'hawking') {
+        const cv = document.createElement('canvas'); cv.width = cv.height = N;
+        const x = cv.getContext('2d');
+        x.fillStyle = '#000'; x.font = `bold ${Math.round(N * 0.42)}px Georgia, serif`;
+        x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('SH', N / 2, N / 2);
+        const px = x.getImageData(0, 0, N, N).data, mask = new Float64Array(N * N);
+        for (let i = 0; i < N * N; i++) mask[i] = px[i * 4 + 3] / 255;
+        boxBlur(mask, N, 3);
+        for (let i = 0; i < N * N; i++) T[i] += 1.4 * rms * mask[i];
+        once('hawking', 'The WMAP map contains the initials "SH" if you squint, by pure chance. This one has them because you asked. Pareidolia is not a cosmological parameter.', 'CMB');
+    } else if (seedL === 'coldspot' || seedL === 'cold spot') {
+        const sig = Math.min(2.5, deg / 6) * Math.PI / 180 / (L / N);
+        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) T[y * N + x] -= 2.2 * rms * Math.exp(-((x - N / 2) ** 2 + (y - N / 2) ** 2) / (2 * sig * sig));
+        once('coldspot', 'The CMB Cold Spot, in Eridanus, about 10° across. Exaggerated here for visibility. Explanations so far: a supervoid, a cosmic texture, or chance. The textbook answer is chance.', 'CMB');
+    } else if (seedL === 'pigeon' || seedL === 'pigeons') {
+        once('pigeon', 'Penzias and Wilson cleaned "white dielectric material" (pigeon droppings) out of their horn antenna in 1964. The 3 K excess was still there. Nobel Prize, 1978. The pigeons were not credited.', 'Historical note');
+    } else if (seedL === 'axis of evil') {
+        once('evil', 'The quadrupole–octopole alignment needs the full sky. On a flat patch, evil has no axis. Try a bigger telescope budget.', 'CMB');
+    }
+
+    CMB.map = { T, N, deg, rms };
+    drawMap();
+
+    // spectrum chart
+    const ls = [];
+    for (let l = 2; l <= 2500; l += 4) ls.push(l);
+    const th = ls.map(Dl), thB = ls.map(l => Dl(l) * B2(l));
+    const bins = [];
+    for (let b = 0; b < nb; b++) if (bn[b] > 0) {
+        const l = bl[b] / bn[b], D = bs[b] / bn[b];
+        bins.push({ l, D, err: Dl(l) * B2(l) * Math.sqrt(2 / Math.max(1, bn[b] / 2)) });
+    }
+    const lMax = Math.min(2500, Math.max(500, lNyq));
+    const ymax = Math.max(...th) * 1.18;
+    const S = [{ name: 'Toy model D_ℓ', color: 'var(--s1)' }];
+    if (beam > 0) S.push({ name: 'Model × beam²', color: 'var(--s1)', dash: true });
+    S.push({ name: 'Measured from this map', color: 'var(--s2)', dots: true });
+    legend($('#cl-legend'), S);
+    const series = [{ color: 'var(--s1)', pts: ls.map((l, i) => [l, th[i]]) }];
+    if (beam > 0) series.push({ color: 'var(--s1)', dash: true, pts: ls.map((l, i) => [l, thB[i]]) });
+    series.push({ color: 'var(--s2)', dots: true, pts: bins.map(b => [b.l, b.D]), err: bins.map(b => b.err) });
+    CMB.chart = {
+        title: 'CMB temperature power spectrum', height: 280,
+        x: [0, lMax], y: [0, ymax], xLabel: 'multipole ℓ', yLabel: 'D_ℓ = ℓ(ℓ+1)C_ℓ/2π  [μK²]',
+        series,
+        hover: { xs: ls, rows: i => {
+            const l = ls[i];
+            const nearest = bins.reduce((best, b) => Math.abs(b.l - l) < Math.abs(best.l - l) ? b : best, bins[0] || { l: 1e9 });
+            const rows = [{ name: 'model', color: 'var(--s1)', y: th[i], text: fmt(th[i], 4) + ' μK²' }];
+            if (beam > 0) rows.push({ name: 'model × beam²', color: 'var(--s1)', y: thB[i], text: fmt(thB[i], 4) + ' μK²' });
+            if (nearest && Math.abs(nearest.l - l) < binW / 2) rows.push({ name: 'this map', color: 'var(--s2)', y: nearest.D, text: fmt(nearest.D, 4) + ' ± ' + fmt(nearest.err, 2) });
+            return { title: 'ℓ = ' + l + ` (≈ ${fmt(180 / l, 3)}°)`, rows };
+        } }
+    };
+    drawChart($('#cl-chart'), CMB.chart);
+
+    let lpk = 2, vpk = 0;
+    for (let l = 100; l < 400; l++) if (Dl(l) > vpk) { vpk = Dl(l); lpk = l; }
+    $('#cmb-derived').innerHTML = rowsHTML([
+        { label: 'Last scattering z<sub>*</sub>', v: fmt(d.zstar, 5), alt: 'age ' + (unitSys === 'cosmo' ? fmt(d.ageStar * 1e6, 4) + ' kyr' : U('time', d.ageStar * PHYS.Gyr, 4)) },
+        { label: 'Sound horizon r<sub>s</sub>(z<sub>*</sub>)', v: U('dist', d.rsStar * PHYS.Mpc), alt: altOr('dist', d.rsStar * PHYS.Mpc) },
+        { label: 'Drag sound horizon r<sub>d</sub>', v: U('dist', d.rd * PHYS.Mpc), alt: altOr('dist', d.rd * PHYS.Mpc, 'the BAO ruler (Aubourg+ 2015 fit)') },
+        { label: 'D<sub>M</sub>(z<sub>*</sub>)', v: U('dist', d.DMstar * PHYS.Mpc), alt: altOr('dist', d.DMstar * PHYS.Mpc) },
+        { label: '100 θ<sub>*</sub>', v: fmt(100 * d.theta, 5), alt: 'ℓ_A = ' + fmt(d.lA, 4) },
+        { label: 'Baryon loading R<sub>*</sub>', v: fmt(d.Rstar, 3) },
+        { label: 'First peak (toy)', v: 'ℓ ≈ ' + lpk, alt: fmt(vpk, 4) + ' μK²' },
+        { label: 'Map rms', v: dTstr(rms * 1e-6), alt: 'T = ' + c.p.Tcmb + ' K ± ' + fmt(rms * 1e-6 / c.p.Tcmb, 2) },
+    ]);
+    status.textContent = `${N}×${N} pixels of ${(deg * 60 / N).toFixed(1)}′ in ${(performance.now() - t0ms).toFixed(0)} ms. One sky, one realisation, cosmic variance included at no extra cost.`;
+    if (beam >= 400 && userTouched) once('cobe', 'COBE resolution (7°). In 1992 George Smoot compared this map to seeing the face of God. Here it looks like a few blobs, which it also was.', 'Historical note');
+}
+function drawMap() {
+    const m = CMB.map; if (!m) return;
+    const { T, N, rms } = m;
+    const steps = [10, 20, 25, 50, 75, 100, 150, 200, 250, 300, 400, 500, 750, 1000];
+    const R = steps.find(s => s >= 3 * rms) || 3 * rms;
+    const cv = $('#cmb-canvas'), ctx = cv.getContext('2d');
+    const img = ctx.createImageData(N, N);
+    for (let i = 0; i < N * N; i++) {
+        const [r, g, b] = cmap(0.5 + T[i] / (2 * R));
+        img.data[i * 4] = r; img.data[i * 4 + 1] = g; img.data[i * 4 + 2] = b; img.data[i * 4 + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+    const bar = $('#cmb-bar'), bctx = bar.getContext('2d');
+    const bimg = bctx.createImageData(256, 1);
+    for (let i = 0; i < 256; i++) { const [r, g, b] = cmap(i / 255); bimg.data.set([r, g, b, 255], i * 4); }
+    bctx.putImageData(bimg, 0, 0);
+    $('#bar-lo').textContent = '−' + dTstr(R * 1e-6, 3);
+    $('#bar-hi').textContent = '+' + dTstr(R * 1e-6, 3);
+    m.R = R;
+}
+$('#cmb-canvas').addEventListener('click', ev => {
+    const m = CMB.map; if (!m) return;
+    const r = ev.currentTarget.getBoundingClientRect();
+    const x = Math.floor((ev.clientX - r.left) / r.width * m.N), y = Math.floor((ev.clientY - r.top) / r.height * m.N);
+    if (x < 0 || y < 0 || x >= m.N || y >= m.N) return;
+    const t = m.T[y * m.N + x];
+    const T0 = cosmo ? cosmo.p.Tcmb : 2.7255;
+    $('#cmb-pix').innerHTML = `ΔT = <b>${t >= 0 ? '+' : '−'}${dTstr(Math.abs(t) * 1e-6)}</b> at (${(x / m.N * m.deg).toFixed(2)}°, ${(y / m.N * m.deg).toFixed(2)}°), so T = ${unitSys === 'cosmo' ? (T0 + t * 1e-6).toFixed(7) + ' K' : U('temp', T0 + t * 1e-6, 8)}.`;
+});
+$('#cmb-go').addEventListener('click', () => { userTouched = true; simulateCMB(); });
+$('#cmb-new').addEventListener('click', () => { userTouched = true; $('#cmb-seed').value = String(Math.floor(Math.random() * 1e6)); simulateCMB(); });
+$('#cmb-seed').addEventListener('keydown', e => { if (e.key === 'Enter') { userTouched = true; simulateCMB(); } });
+for (const id of ['cmb-size', 'cmb-beam']) $('#' + id).addEventListener('change', () => { userTouched = true; simulateCMB(); });
+$('#cmb-png').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.download = `cmb_${$('#cmb-seed').value.replace(/[^\w-]+/g, '_') || 'sky'}_${num('cmb-size')}deg.png`;
+    a.href = $('#cmb-canvas').toDataURL('image/png');
+    a.click();
+});
+
+/* =====================================================================
+   redshift + lines
+   ===================================================================== */
+const LINES = [
+    ['Lyα', 1215.67], ['C IV', 1549.06], ['Mg II', 2798.75], ['[O II]', 3727.4], ['Ca II K', 3933.66], ['Ca II H', 3968.47],
+    ['Hβ', 4861.33], ['[O III]', 5006.84], ['Na I D', 5892.9], ['Hα', 6562.80], ['[S II]', 6724.0], ['Paα', 18751.0], ['H I 21 cm', 2.1106114e9]
+];
+function band(A) {
+    if (A < 100) return 'X-ray';
+    if (A < 912) return 'EUV (mostly absorbed by H I)';
+    if (A < 3200) return 'UV';
+    if (A < 3900) return 'near-UV';
+    if (A < 7500) return 'optical';
+    if (A < 2.5e4) return 'near-IR';
+    if (A < 3e5) return 'mid-IR';
+    if (A < 3e6) return 'far-IR';
+    if (A < 1e7) return 'sub-mm';
+    return 'radio';
+}
+function fmtLambda(A) {
+    if (A < 1e4) return fmt(A, 6) + ' Å';
+    if (A < 1e7) return fmt(A / 1e4, 5) + ' μm';
+    if (A < 1e8) return fmt(A / 1e7, 5) + ' mm';
+    return fmt(A / 1e8, 5) + ' cm';
+}
+const lam = A => unitSys === 'cosmo' || unitSys === 'sim' ? fmtLambda(A) : U('wave', A * 1e-10, 6);
+function updateRedshift(from) {
+    let z;
+    if (from === 'a') { const a = num('rz-a'); z = 1 / a - 1; }
+    else if (from === 'v') { const b = toSI('vel', num('rz-v')) / PHYS.c; z = Math.sqrt((1 + b) / (1 - b)) - 1; }
+    else z = num('rz-z');
+    const warn = $('#rz-warn');
+    if (!Number.isFinite(z) || z <= -1) { warn.textContent = 'Need z > −1 (and |v| < c).'; $('#rz-res').innerHTML = ''; return; }
+    warn.textContent = '';
+    const opz = 1 + z, beta = (opz * opz - 1) / (opz * opz + 1);
+    if (from !== 'z') $('#rz-z').value = +z.toPrecision(8);
+    if (from !== 'a') $('#rz-a').value = +(1 / opz).toPrecision(8);
+    if (from !== 'v') $('#rz-v').value = +Uval('vel', beta * PHYS.c).toPrecision(8);
+    const rows = [
+        { label: 'z, 1 + z', v: fmt(z, 6) + ', ' + fmt(opz, 6) },
+        { label: 'v (relativistic Doppler)', v: U('vel', beta * PHYS.c, 6), alt: altOr('vel', beta * PHYS.c, 'β = ' + fmt(beta, 5)) },
+        { label: 'cz (naive)', v: U('vel', z * PHYS.c, 6), alt: Math.abs(z) > 0.1 ? "don't" : altOr('vel', z * PHYS.c) },
+        { label: 'Time dilation', v: '× ' + fmt(opz, 5), alt: 'light curves stretch by this' },
+        { label: 'Surface brightness', v: '× ' + fmt(opz ** -4, 4), alt: '(1+z)⁻⁴, Tolman' },
+        { sec: 'Lines (rest → observed)' },
+    ];
+    for (const [name, A] of LINES) {
+        const obs = A * opz;
+        const alt = name.includes('21') ? fmt(1420.405751768 / opz, 6) + ' MHz' : band(obs);
+        rows.push({ label: name + ' <span class="small">' + fmtLambda(A) + '</span>', v: lam(obs), alt: unitSys === 'cosmo' ? alt : fmtLambda(obs) + ', ' + alt });
+    }
+    const rest = num('rz-rest');
+    if (rest > 0) rows.push({ label: 'Custom <span class="small">' + fmtLambda(rest) + '</span>', v: lam(rest * opz), alt: (unitSys === 'cosmo' ? '' : fmtLambda(rest * opz) + ', ') + band(rest * opz), hl: true });
+    $('#rz-res').innerHTML = rowsHTML(rows);
+    $('#rz-status').textContent = z < 0 ? 'Blueshift. Something is approaching.' : 'Everything is moving away from us. Nothing personal.';
+
+    if (from !== 'init') {
+        userTouched = true;
+        const v = beta * C_KMS;
+        if (z < 0 && Math.abs(v + 301) < 40) once('m31', 'Andromeda: about −300 km/s, so z ≈ −0.001. It will merge with the Milky Way in roughly 4.5 Gyr. There is time.', 'Local Group');
+        else if (z < 0) once('blue', 'A blueshift. Within the Local Group this is normal. At cosmological distances it would be very interesting, or a sign error.', 'Note');
+        if (z >= 1089) once('lss2', 'z ≥ 1090: that is the last-scattering surface. Beyond it the universe is a fog of plasma. You can see the fog, but not through it.', 'Last scattering');
+        if (Math.abs(z - 42) < 1e-9) once('z42', 'z = 42: the answer, redshifted. Lyα lands at 5.2 μm, so JWST would be your best bet.', 'Note');
+    }
+}
+$('#rz-z').addEventListener('input', () => updateRedshift('z'));
+$('#rz-a').addEventListener('input', () => updateRedshift('a'));
+$('#rz-v').addEventListener('input', () => updateRedshift('v'));
+$('#rz-rest').addEventListener('input', () => updateRedshift('z'));
+$('#rz-send').addEventListener('click', () => {
+    const z = num('rz-z');
+    if (!(z >= 0)) { $('#rz-status').textContent = 'The calculator only takes z ≥ 0.'; return; }
+    $('#solve-kind').value = 'z'; $('#solve-val').value = z; userTouched = true; computeCalc();
+    $('#calc').scrollIntoView({ behavior: 'smooth' });
+});
+
+/* =====================================================================
+   units + constants
+   ===================================================================== */
+const UNITS = {
+    length: [['m', 1], ['km', 1e3], ['R⊕', PHYS.Rearth], ['R☉', PHYS.Rsun], ['au', PHYS.au], ['light-year', PHYS.ly], ['pc', PHYS.pc], ['kpc', PHYS.pc * 1e3], ['Mpc', PHYS.Mpc], ['Gpc', PHYS.Mpc * 1e3],
+        ['GeV⁻¹ (ħc = 1)', 1.973269804e-16], ['inch', 0.0254], ['foot', 0.3048], ['mile', 1609.344], ['furlong', 201.168], ['league', 4828.032],
+        ['parking space (18 ft)', PARKING], ['handegg field (100 yd)', HANDEGG], ['Death Star diameter', 2 * DEATHSTAR_R], ['Kessel Run (12 pc)', 12 * PHYS.pc]],
+    time: [['s', 1], ['min', 60], ['h', 3600], ['day', 86400], ['yr (Julian)', PHYS.yr], ['Myr', PHYS.yr * 1e6], ['Gyr', PHYS.Gyr], ['Planck time', 5.391247e-44],
+        ['fortnight', 1209600], ['drive-thru wait (~6 min)', 360], ['presidential term (4 yr, if completed)', 4 * PHYS.yr], ['Galactic Standard year (368 d)', 368 * 86400]],
+    mass: [['kg', 1], ['g', 1e-3], ['eV/c²', PHYS.eV / PHYS.c ** 2], ['GeV/c²', 1e9 * PHYS.eV / PHYS.c ** 2], ['mₑ', PHYS.me], ['mₚ', PHYS.mp], ['M⊕', PHYS.Mearth], ['M♃', PHYS.Mjup], ['M☉', PHYS.Msun],
+        ['pound', 0.45359237], ['stone', 6.35029318], ['Big Mac', BIGMAC], ['Wookiee', WOOKIEE]],
+    energy: [['J', 1], ['erg', 1e-7], ['eV', PHYS.eV], ['keV', 1e3 * PHYS.eV], ['MeV', 1e6 * PHYS.eV], ['GeV', 1e9 * PHYS.eV], ['K (k_B T)', PHYS.kB], ['Hz (hν)', PHYS.h], ['foe (10⁵¹ erg)', 1e44],
+        ['kcal (food Calorie)', 4184], ['Big Mac (~550 kcal)', 550 * 4184], ['ton of TNT', 4.184e9], ['Death Star shot (Earth binding energy)', 2.24e32]],
+};
+function fillUnits() {
+    const cat = $('#u-cat').value, sel = $('#u-unit');
+    sel.innerHTML = '';
+    UNITS[cat].forEach(([n], i) => sel.add(new Option(n, i)));
+    sel.value = cat === 'length' ? 6 : cat === 'time' ? 4 : cat === 'mass' ? 8 : 2;
+}
+function updateUnits(user) {
+    const cat = $('#u-cat').value, list = UNITS[cat], val = num('u-val'), [uname, uf] = list[+$('#u-unit').value];
+    const si = val * uf;
+    $('#u-res').innerHTML = rowsHTML(list.map(([n, f]) => ({ label: n, v: fmt(si / f, 7), hl: n === uname })));
+    $('#u-status').textContent = `${fmt(val, 7)} ${uname} = ${fmt(si, 7)} ${list[0][0]}`;
+    if (user && cat === 'length' && ((uname === 'pc' && Math.abs(val - 12) < 1e-9) || uname.startsWith('Kessel'))) {
+        once('kessel', 'Less than 12 parsecs? A parsec is a unit of distance, not time. (Later canon says he meant a shorter route past the Maw. Fine.) 12 pc is about 39 light-years, so the Kessel Run takes a while.', 'Kessel Run');
+    }
+}
+$('#u-cat').addEventListener('change', () => { fillUnits(); updateUnits(true); });
+$('#u-unit').addEventListener('change', () => updateUnits(true));
+$('#u-val').addEventListener('input', () => updateUnits(true));
+
+const CONSTS = [
+    ['c', 'speed of light', PHYS.c, 'm s⁻¹', 'exact'],
+    ['G', 'gravitational constant', PHYS.G, 'm³ kg⁻¹ s⁻²', ''],
+    ['h', 'Planck constant', PHYS.h, 'J s', 'exact'],
+    ['ħ', 'reduced Planck constant', PHYS.hbar, 'J s', ''],
+    ['k_B', 'Boltzmann constant', PHYS.kB, 'J K⁻¹', 'exact'],
+    ['σ_SB', 'Stefan–Boltzmann constant', PHYS.sigmaSB, 'W m⁻² K⁻⁴', ''],
+    ['σ_T', 'Thomson cross-section', PHYS.sigmaT, 'm²', ''],
+    ['m_p', 'proton mass', PHYS.mp, 'kg', ''],
+    ['m_e', 'electron mass', PHYS.me, 'kg', ''],
+    ['e', 'elementary charge', PHYS.e, 'C', 'exact'],
+    ['N_A', 'Avogadro constant', PHYS.NA, 'mol⁻¹', 'exact'],
+    ['α', 'fine-structure constant', PHYS.alpha, '', '≈ 1/137.036'],
+    ['au', 'astronomical unit', PHYS.au, 'm', 'exact'],
+    ['pc', 'parsec', PHYS.pc, 'm', '648000/π au'],
+    ['ly', 'light-year', PHYS.ly, 'm', 'Julian'],
+    ['M☉', 'solar mass', PHYS.Msun, 'kg', 'GM☉/G'],
+    ['L☉', 'solar luminosity', PHYS.Lsun, 'W', 'nominal'],
+    ['R☉', 'solar radius', PHYS.Rsun, 'm', 'nominal'],
+    ['T_CMB', 'CMB temperature today', 2.7255, 'K', 'Fixsen 2009'],
+    ['ρ_crit', 'critical density / h²', 1.87834e-26, 'kg m⁻³', '2.7754 × 10¹¹ M☉ Mpc⁻³'],
+    ['1/H₀', 'Hubble time × h', 9.77792, 'Gyr', ''],
+    ['c/H₀', 'Hubble distance × h', 2997.92458, 'Mpc', ''],
+];
+$('#k-res').innerHTML = CONSTS.map(([s, n, v, u, extra], i) =>
+    `<tr class="click" data-i="${i}" title="Click to copy"><th scope="row"><b>${esc(s)}</b> <span class="small">${esc(n)}</span></th><td class="v">${fmt(v, 10)} ${u}</td><td class="alt">${esc(extra)}</td></tr>`).join('');
+$('#k-res').addEventListener('click', ev => {
+    const tr = ev.target.closest('tr[data-i]'); if (!tr) return;
+    const [s, , v] = CONSTS[+tr.dataset.i];
+    copyText(String(v), $('#k-status'), `${s} = ${v}`);
+});
+
+/* =====================================================================
+   referee #2: hints, phrased as peer review
+   ===================================================================== */
+const REVIEW = [
+    'The authors default to the Planck value of H0 without justification. I ask them to try 73.04 and to report how they feel about it.',
+    'Please repeat the analysis with Hubble\'s original 1929 value. The age of the universe will be instructive.',
+    'The calculator lets the dark energy equation of state go below w = -1. The authors do not discuss the consequences. They should.',
+    'With Omega_Lambda = 2 in a non-flat model, I could not find a Big Bang. Is this intended?',
+    'The CMB simulator should be validated with the seed "hawking". Several colleagues report seeing initials.',
+    'The authors have not addressed the Cold Spot. A suitable seed would help.',
+    'The map at COBE resolution is, frankly, unreviewable. Please comment on its historical significance.',
+    'Section "Redshift": what happens for the Andromeda galaxy? Negative values of z must be tested.',
+    'The unit converter was not tested for the Kessel Run. 12 is the relevant number.',
+    'The manuscript lacks an inflationary epoch. Readers who grew up with game consoles will know the code.',
+    'I left the page open for two minutes while writing this report. The authors should discuss the long-term fate of the reader.',
+    'The sky in the margins contains unannounced transients. The authors should click on them before they fade.',
+    'Has the author tried typing 6EQUJ5? It should elicit a strong response.',
+    'The value H0 = 42 is never discussed. Neither is z = 42.',
+    'The dark mode button raises a classic paradox. Its resolution should be cited.',
+    'I have no further comments. Recommendation: reject. I look forward to the revised version.',
+];
+let reviewIdx = 0;
+function showReview() {
+    $('#report').textContent = `Comment ${reviewIdx + 1}.\n${REVIEW[reviewIdx]}`;
+    $('#report-count').textContent = `${reviewIdx + 1} of ${REVIEW.length}`;
+}
+$('#report-next').addEventListener('click', () => { reviewIdx = (reviewIdx + 1) % REVIEW.length; showReview(); });
+showReview();
+
+/* =====================================================================
+   theme: olbers' switch
+   ===================================================================== */
+function isDark() {
+    const t = document.documentElement.dataset.theme;
+    return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+}
+function labelOlbers() { $('#olbers').textContent = isDark() ? 'Let there be light' : 'Why is the sky dark?'; }
+$('#olbers').addEventListener('click', () => {
+    const next = isDark() ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('cosmo-theme', next); } catch {}
+    labelOlbers();
+    once('olbers', "Olbers' paradox: in an infinite, static, eternal universe every line of sight ends on a star, so the night sky should be bright. It is dark because the universe has a finite age and it expands. Here it is also dark because of a CSS variable.", "Olbers' paradox");
+});
+labelOlbers();
+
+/* =====================================================================
+   easter eggs that live outside the windows
+   ===================================================================== */
+// konami -> inflation
+const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+let kpos = 0, typed = '';
+document.addEventListener('keydown', e => {
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    kpos = k === KONAMI[kpos] ? kpos + 1 : (k === KONAMI[0] ? 1 : 0);
+    if (kpos === KONAMI.length) {
+        kpos = 0;
+        const m = $('#main');
+        m.classList.remove('inflating'); void m.offsetWidth; m.classList.add('inflating');
+        setTimeout(() => m.classList.remove('inflating'), 1900);
+        seen.add('inflation');
+        note('Inflation: about 60 e-folds in 10⁻³² s. Your browser managed about one e-fold in half a second. Reheating complete. The horizon problem is solved, at least on this page.', 'Inflation');
+    }
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if (e.key.length === 1) {
+        typed = (typed + e.key.toUpperCase()).slice(-6);
+        if (typed === '6EQUJ5') {
+            seen.add('wow');
+            note('<b>Wow!</b> Big Ear radio telescope, 15 August 1977, 1420 MHz, 72 seconds, near Sagittarius. It was never seen again. Jerry Ehman circled it in red pen and wrote "Wow!" next to it. Your keyboard has now produced the same signal, which proves nothing.', 'Signal detected', 14000);
+        }
+    }
+});
+
+// tab title
+const TITLE = document.title;
+document.addEventListener('visibilitychange', () => {
+    document.title = document.hidden ? 'Redshifting out of view…' : TITLE;
+    if (document.hidden) seen.add('tab');
+});
+
+// heat death after 2 minutes of nothing
+let lastAct = Date.now(), heat = false;
+const wake = () => {
+    lastAct = Date.now();
+    if (heat) {
+        heat = false;
+        document.documentElement.classList.remove('heat');
+        note('Heat death postponed. You brought in some low-entropy input. The universe thanks you.', 'Thermodynamics');
+    }
+};
+for (const ev of ['pointermove', 'pointerdown', 'keydown', 'scroll', 'touchstart']) addEventListener(ev, wake, { passive: true });
+setInterval(() => {
+    if (!heat && !document.hidden && Date.now() - lastAct > 120000) {
+        heat = true;
+        seen.add('heat');
+        document.documentElement.classList.add('heat');
+    }
+}, 5000);
+
+// supernovae in the margins
+function spawnSN() {
+    const margin = (innerWidth - 900) / 2;
+    if (margin < 70 || document.hidden || heat) return;
+    const left = Math.random() < 0.5;
+    const x = left ? 20 + Math.random() * (margin - 50) : innerWidth - margin + 30 + Math.random() * (margin - 50);
+    const y = 60 + Math.random() * (innerHeight - 120);
+    const b = document.createElement('button');
+    b.className = 'sn';
+    b.type = 'button';
+    b.setAttribute('aria-label', 'A transient. Click it.');
+    b.style.left = x + 'px'; b.style.top = y + 'px';
+    b.addEventListener('click', () => {
+        b.remove();
+        seen.add('sn');
+        const c = cosmo;
+        if (!c || c.noBigBang) return;
+        const z = +(0.02 + Math.random() * 1.1).toFixed(3);
+        const m = -19.3 + c.mu(z);
+        userTouched = true;
+        note(`Type Ia supernova at z = ${z}. Peak M<sub>B</sub> ≈ −19.3, so in your current cosmology it peaks at m ≈ ${m.toFixed(2)} (D<sub>L</sub> = ${fmt(c.DL(z), 4)} Mpc). Collect a few hundred of these and you have dark energy. 2011 Nobel Prize, retroactively shared with you.`, 'Transient', 14000);
+    });
+    document.body.appendChild(b);
+    setTimeout(() => b.remove(), 26500);
+}
+setTimeout(function loop() { spawnSN(); setTimeout(loop, 70000 + Math.random() * 110000); }, 25000 + Math.random() * 20000);
+
+/* =====================================================================
+   shooting stars. catching one gives a hint for an egg you have not found yet
+   ===================================================================== */
+const HINTS = [
+    ['team-', 'The calculator has opinions about H₀, and so does everyone else.', 'Set H₀ to 73.04 or to 67.4 in the calculator.'],
+    ['hubble29', 'Try H₀ the way it was measured in 1929.', 'Pick the "Hubble (1929)" preset.'],
+    ['42', 'Some numbers answer everything.', 'Set H₀ = 42, or z = 42.'],
+    ['nobb', 'Not every universe starts with a bang.', 'Untick "flat" and set Ω_Λ = 2.'],
+    ['crunch', 'What goes up…', 'Untick "flat", then set Ω_m = 3 and Ω_Λ = 0.'],
+    ['rip', 'Dark energy can be more extreme than a cosmological constant.', 'Set w₀ = −1.2.'],
+    ['steady', 'Fred Hoyle never liked the Big Bang.', 'Untick "flat", then set Ω_m = 0, Ω_Λ = 1 and T_CMB = 0.'],
+    ['lss', 'There is a wall at the edge of what you can see.', 'Enter z = 1100 in the calculator.'],
+    ['m31', 'Not everything is moving away from us.', 'Enter z = −0.001 in the redshift window.'],
+    ['kessel', "A smuggler's favourite unit is not a unit of time.", 'Convert 12 pc in the unit converter.'],
+    ['hawking', 'Some people see initials in the CMB.', 'Use the CMB seed "hawking".'],
+    ['coldspot', 'One part of the sky is colder than it should be.', 'Use the CMB seed "coldspot".'],
+    ['pigeon', 'The first CMB detection was blamed on birds.', 'Use the CMB seed "pigeon".'],
+    ['cobe', 'The 1992 sky was a bit blurry.', 'Choose COBE as the telescope in the CMB window.'],
+    ['inflation', 'Old games had a code for extra lives. The early universe had one for extra size.', '↑ ↑ ↓ ↓ ← → ← → B A, outside a text box.'],
+    ['wow', 'A signal from 1977 got a one-word review.', 'Type 6EQUJ5 anywhere outside a text box.'],
+    ['heat', 'Everything eventually ends up at the same temperature.', 'Leave the page alone for two minutes.'],
+    ['sn', 'The margins of the page are not always empty.', 'On a wide screen, watch the edges for a star that brightens, and click it.'],
+    ['olbers', 'Why is the sky dark?', 'Click the dark-mode button at the top.'],
+    ['units-american', 'One of the unit systems is measured in sandwiches.', 'Pick "American" as the unit system.'],
+    ['units-starwars', 'A long time ago, in a unit system far, far away…', 'Pick "Star Wars" as the unit system.'],
+    ['tab', 'Leave for a moment and see what the tab says.', 'Switch to another browser tab, then look at this tab\'s title.'],
+];
+const found = key => [...seen].some(k => k === key || (key.endsWith('-') && k.startsWith(key)));
+function giveHint() {
+    const open = HINTS.filter(h => !found(h[0]));
+    if (!open.length) { note('You have found every easter egg. Nothing remains but the heat death of the universe. Well done.', 'Shooting star', 12000); return; }
+    const [, subtle, obvious] = open[Math.floor(Math.random() * open.length)];
+    note(`${esc(subtle)}<br><button class="more" type="button">Too subtle? Tell me plainly.</button>`, 'Shooting star', 16000);
+    $('#toast-msg .more').addEventListener('click', () => note(esc(obvious), 'Shooting star (plainly)', 14000));
+}
+function launchStar(manual = false) {
+    if (document.hidden || heat || $('.shoot')) return;
+    const W = innerWidth, H = innerHeight;
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    const ang = (18 + Math.random() * 22) * Math.PI / 180;
+    const len = Math.min(Math.max(W * 0.45, 260), 700);
+    const x0 = dir > 0 ? W * (0.05 + Math.random() * 0.4) : W * (0.55 + Math.random() * 0.4);
+    const y0 = H * (0.04 + Math.random() * 0.3);
+    const x1 = x0 + dir * len * Math.cos(ang), y1 = y0 + len * Math.sin(ang);
+    const rot = dir > 0 ? ang : Math.PI - ang;
+    const b = document.createElement('button');
+    b.className = 'shoot';
+    b.type = 'button';
+    b.setAttribute('aria-label', 'Shooting star. Catch it for a hint.');
+    b.innerHTML = '<span class="tail"></span><span class="head"></span>';
+    document.body.appendChild(b);
+    const tf = (x, y) => `translate(${x}px, ${y}px) rotate(${rot}rad)`;
+    const anim = b.animate([{ transform: tf(x0, y0), opacity: 0 }, { opacity: 1, offset: 0.12 }, { opacity: 1, offset: 0.8 }, { transform: tf(x1, y1), opacity: 0 }],
+        { duration: manual ? 2600 : 2200, easing: 'linear', fill: 'forwards' });
+    anim.onfinish = () => b.remove();
+    b.addEventListener('click', () => { anim.cancel(); b.remove(); giveHint(); });
+}
+$('#wish').addEventListener('click', () => launchStar(true));
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    setTimeout(function sky() { launchStar(); setTimeout(sky, 35000 + Math.random() * 50000); }, 12000 + Math.random() * 12000);
+}
+
+/* =====================================================================
+   console
+   ===================================================================== */
+console.log('%c\n        .   *        .         .\n   *        ___    .      *\n      .   /  _  \\      .\n  .      | (_)  |  ~~~ z = 1100 ~~~\n     *    \\ ___/    .        .\n   .          .         *\n', 'color:#9cc2f0;font-family:monospace');
+console.log('Reading the source? Referee #2 at the bottom of the page has notes.\nThere are about twenty easter eggs. The HTML comment at the top lists them, if you want spoilers.');
+
+/* =====================================================================
+   boot
+   ===================================================================== */
+function redrawCharts() {
+    if (cosmo) drawDistChart(cosmo, lastState.z);
+    updateTension();
+    if (CMB.chart) drawChart($('#cl-chart'), CMB.chart);
+}
+const unitSel = $('#unitsys');
+for (const [k, sys] of Object.entries(UNIT_SYSTEMS)) unitSel.add(new Option(sys.label, k));
+unitSel.value = unitSys;
+const U_INPUTS = { sigv: 'vel', mlens: 'mass', 'hc-d': 'dist', 'hc-v': 'vel', 'rz-v': 'vel' };
+function relabelUnits() {
+    document.querySelectorAll('[data-ukind]').forEach(el => { el.textContent = unitOf(el.dataset.ukind).name; });
+    for (const o of $('#solve-kind').options) if (SOLVE_KIND[o.value]) o.textContent = `${o.dataset.name} [${unitOf(SOLVE_KIND[o.value][0]).name}]`;
+}
+// same physical value, new number in the boxes
+// remembers the exact value behind each box, so flipping systems back and forth doesn't drift
+function convertInputs(from, to) {
+    const conv = (el, toBase, fromBase) => {
+        const v = parseFloat(el.value);
+        if (!Number.isFinite(v)) return;
+        const base = el.dataset.shown === el.value ? +el.dataset.base : toBase(v, from);
+        el.value = +fromBase(base, to).toPrecision(8);
+        el.dataset.base = base;
+        el.dataset.shown = el.value;
+    };
+    for (const [id, kind] of Object.entries(U_INPUTS)) conv($('#' + id), (v, sys) => toSI(kind, v, sys), (b, sys) => Uval(kind, b, sys));
+    const k = $('#solve-kind').value;
+    $('#solve-val').dataset.shown = $('#solve-val').dataset.kind === k ? $('#solve-val').dataset.shown : '';
+    $('#solve-val').dataset.kind = k;
+    conv($('#solve-val'), (v, sys) => solveToInternal(k, v, sys), (b, sys) => solveFromInternal(k, b, sys));
+}
+unitSel.addEventListener('change', () => {
+    convertInputs(unitSys, unitSel.value);
+    unitSys = unitSel.value;
+    relabelUnits();
+    updateTension();
+    fitH0();
+    try { localStorage.setItem('cosmo-units', unitSys); } catch {}
+    computeCalc();
+    if (CMB.map) simulateCMB();
+    updateRedshift('init');
+    if (UNIT_REMARKS[unitSys]) once('units-' + unitSys, UNIT_REMARKS[unitSys], 'Unit system');
+});
+readHash();
+if (unitSys !== 'cosmo') { convertInputs('cosmo', unitSys); relabelUnits(); }
+if (!location.hash.includes('=')) presetSel.value = 'planck18';
+computeCalc();
+$('#hc-H0').value = num('H0');
+updateHubbleConv(false);
+updateTension();
+fitH0();
+updateRedshift('init');
+fillUnits();
+updateUnits(false);
+simulateCMB();
+let rT = 0, lastW = $('#main').clientWidth;
+new ResizeObserver(() => {
+    const w = $('#main').clientWidth;
+    if (w === lastW) return;
+    lastW = w; clearTimeout(rT); rT = setTimeout(redrawCharts, 150);
+}).observe($('#main'));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', labelOlbers);
+</script>
+</body>
+</html>
