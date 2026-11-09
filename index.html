@@ -1278,7 +1278,7 @@ const UNIT_REMARKS = {
     cgs: 'cgs units: the system astronomers keep using because their textbooks do. Luminosities in erg/s, as nature intended.',
     natural: 'Natural units, ħ = c = k_B = 1. H₀ comes out around 10⁻⁴² GeV, which particle physicists find perfectly reasonable.',
     imperial: 'Imperial units. Velocities in furlongs per fortnight, temperature in Rankine (absolute Fahrenheit, for the thermodynamically inclined). The comoving volume in gallons is left as an exercise.',
-    american: 'American units. Distances in handegg fields (100 yards, end zones not included, and it is not football), masses in Big Macs, short times in drive-thru waits, density in Big Macs per oil barrel. Long times are in presidential terms, which assumes four full years each. Impeachments and other early exits are not modelled (live status: <a href="https://is-he-dead-yet.com/" target="_blank" rel="noopener">is-he-dead-yet.com</a>). T_CMB = −454.76 °F, so bring a jacket.',
+    american: 'American units. Distances in handegg fields (100 yards, end zones not included, and it is not football), masses in Big Macs, short times in drive-thru waits, density in Big Macs per oil barrel. Long times are in presidential terms, which assumes four full years each. T_CMB = −454.76 °F, so bring a jacket.',
     starwars: 'Star Wars units. Distances in Kessel Runs (12 parsecs each, which are a distance, not a time; we have been over this), masses in Wookiees, volumes in Death Stars. Calendar: 368-day Galactic Standard years.',
 };
 let unitSys = 'cosmo';
@@ -2147,7 +2147,7 @@ const UNITS = {
         ['GeV⁻¹ (ħc = 1)', 1.973269804e-16], ['inch', 0.0254], ['foot', 0.3048], ['mile', 1609.344], ['furlong', 201.168], ['league', 4828.032],
         ['parking space (18 ft)', PARKING], ['handegg field (100 yd)', HANDEGG], ['Death Star diameter', 2 * DEATHSTAR_R], ['Kessel Run (12 pc)', 12 * PHYS.pc]],
     time: [['s', 1], ['min', 60], ['h', 3600], ['day', 86400], ['yr (Julian)', PHYS.yr], ['Myr', PHYS.yr * 1e6], ['Gyr', PHYS.Gyr], ['Planck time', 5.391247e-44],
-        ['fortnight', 1209600], ['drive-thru wait (~6 min)', 360], ['presidential term (4 yr, if completed)', 4 * PHYS.yr], ['Galactic Standard year (368 d)', 368 * 86400]],
+        ['fortnight', 1209600], ['drive-thru wait (~6 min)', 360], ['presidential term (4 yr)', 4 * PHYS.yr], ['Galactic Standard year (368 d)', 368 * 86400]],
     mass: [['kg', 1], ['g', 1e-3], ['eV/c²', PHYS.eV / PHYS.c ** 2], ['GeV/c²', 1e9 * PHYS.eV / PHYS.c ** 2], ['mₑ', PHYS.me], ['mₚ', PHYS.mp], ['M⊕', PHYS.Mearth], ['M♃', PHYS.Mjup], ['M☉', PHYS.Msun],
         ['pound', 0.45359237], ['stone', 6.35029318], ['Big Mac', BIGMAC], ['Wookiee', WOOKIEE]],
     energy: [['J', 1], ['erg', 1e-7], ['eV', PHYS.eV], ['keV', 1e3 * PHYS.eV], ['MeV', 1e6 * PHYS.eV], ['GeV', 1e9 * PHYS.eV], ['K (k_B T)', PHYS.kB], ['Hz (hν)', PHYS.h], ['foe (10⁵¹ erg)', 1e44],
