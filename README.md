@@ -64,6 +64,10 @@ The page uses these. If it saves you time, cite them, not the page.
 
 There are about twenty easter eggs. Catch a shooting star for a hint, or press "Wish upon a star" if you're impatient. Referee #2, at the bottom of the page, also has comments that might help, if you can stand reading them.
 
+## Sibling projects
+
+- [Lensing Simulator](https://simulator.lensing.science/): an interactive gravitational lensing simulator and primer, also a single HTML file
+
 ## Licence
 
 MIT. See [LICENSE](LICENSE).
