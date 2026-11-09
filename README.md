@@ -21,7 +21,7 @@ A cosmology calculator plus a few other tools you end up needing anyway. It's a 
 - D_d, D_s, D_ds, the time-delay distance D_Δt, the time-delay scale, Σ_crit, and Einstein radii for an SIS (from σ_v) and for a point mass
 
 **H₀ and the Hubble tension**
-- Pick two measurements, early-universe or late-universe, or type your own. You get the tension in σ, a p-value, a verdict, and a plot.
+- Pick two measurements, early-universe or late-universe, or type your own. You get the tension in σ, a p-value, a verdict, and a plot. Each measurement links to its paper.
 - H₀ unit conversions, a Hubble's-law calculator, and a weighted least-squares fit of v = H₀d to your own data
 
 **CMB sky simulator**
@@ -57,7 +57,7 @@ The page uses these. If it saves you time, cite them, not the page.
 - Aubourg et al. (2015), PRD 92, 123516: r_d fitting formula
 - Caldwell, Kamionkowski & Weinberg (2003), PRL 91, 071301: Big Rip
 - Planck Collaboration (2020), A&A 641, A6
-- H₀ values: Riess et al. 2022, Freedman et al. 2021, Wong et al. 2020, Birrer et al. 2020, Kelly et al. 2023, Pascale et al. 2025, Pesce et al. 2020, DESI Collaboration 2024
+- H₀ values: Riess et al. 2022, Freedman 2021, Wong et al. 2020, TDCOSMO Collaboration 2025 and 2026, Kelly et al. 2023, Pascale et al. 2025, Pesce et al. 2020, DESI Collaboration 2024
 - Required reading on the tension: [xkcd 2516](https://xkcd.com/2516/)
 
 ## Features nobody asked for

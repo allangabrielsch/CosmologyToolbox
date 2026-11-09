@@ -222,6 +222,7 @@
         }
         .fields label { font-size: 13.5px; }
         .fields .span { grid-column: 1 / -1; }
+        .fields .ref { margin-top: -3px; min-height: 1.5em; }   /* holds its height when empty, so nothing jumps */
         input[type="number"], input[type="text"], select, textarea {
             width: 100%;
             min-height: 32px;
@@ -619,10 +620,14 @@
                 <div class="fields">
                     <label for="ta-sel">A</label>
                     <select id="ta-sel"></select>
+                    <span></span>
+                    <div id="ta-ref" class="small ref"></div>
                     <label for="ta-v">H₀ ± σ</label>
                     <div class="row" style="flex-wrap:nowrap"><input id="ta-v" type="number" step="0.01" style="flex:1 1 0"><input id="ta-e" type="number" step="0.01" style="flex:1 1 0"></div>
                     <label for="tb-sel">B</label>
                     <select id="tb-sel"></select>
+                    <span></span>
+                    <div id="tb-ref" class="small ref"></div>
                     <label for="tb-v">H₀ ± σ</label>
                     <div class="row" style="flex-wrap:nowrap"><input id="tb-v" type="number" step="0.01" style="flex:1 1 0"><input id="tb-e" type="number" step="0.01" style="flex:1 1 0"></div>
                     <label for="mine">Your H₀</label>
@@ -1039,23 +1044,25 @@ let userTouched = false;   // no remarks for the default page load
 /* =====================================================================
    the hubble tension, in data
    ===================================================================== */
+// published values. asymmetric errors become (σ₊ + σ₋)/2, stat and sys add in quadrature
 const H0_EARLY = [
-    { name: 'Planck 2018 (CMB)', ref: 'Planck Collab. 2020, A&A 641, A6', v: 67.36, e: 0.54 },
-    { name: 'Planck 2018 + BAO', ref: 'Planck Collab. 2020', v: 67.66, e: 0.42 },
-    { name: 'BBN + BAO (DESI 2024)', ref: 'DESI Collab. 2024', v: 68.52, e: 0.62 },
+    { name: 'Planck 2018 (CMB)', ref: 'Planck Collaboration 2020', doi: '10.1051/0004-6361/201833910', v: 67.36, e: 0.54 },
+    { name: 'Planck 2018 + BAO', ref: 'Planck Collaboration 2020', doi: '10.1051/0004-6361/201833910', v: 67.66, e: 0.42 },
+    { name: 'DESI 2024 (BAO + BBN + CMB θ*)', ref: 'DESI Collaboration 2025', doi: '10.1088/1475-7516/2025/02/021', v: 68.52, e: 0.62 },  // BAO + BBN alone: 68.53 ± 0.80
 ];
 const H0_LATE = [
-    { name: 'SH0ES Cepheids + SNe Ia', ref: 'Riess et al. 2022', v: 73.04, e: 1.04 },
-    { name: 'TRGB + SNe Ia (CCHP)', ref: 'Freedman et al. 2021', v: 69.8, e: 1.7 },
-    { name: 'Lensed quasars (H0LiCOW)', ref: 'Wong et al. 2020', v: 73.3, e: 1.75 },
-    { name: 'Lensed quasars + SLACS (TDCOSMO)', ref: 'Birrer et al. 2020', v: 67.4, e: 3.65 },
-    { name: 'Lensed SN Refsdal', ref: 'Kelly et al. 2023', v: 66.6, e: 3.7 },
-    { name: 'Lensed SN H0pe', ref: 'Pascale et al. 2025', v: 75.4, e: 6.8 },
-    { name: 'Megamasers (MCP)', ref: 'Pesce et al. 2020', v: 73.9, e: 3.0 },
+    { name: 'SH0ES (Cepheids + SNe Ia)', ref: 'Riess et al. 2022', doi: '10.3847/2041-8213/ac5c5b', v: 73.04, e: 1.04 },
+    { name: 'CCHP (TRGB + SNe Ia)', ref: 'Freedman 2021', doi: '10.3847/1538-4357/ac0e95', v: 69.8, e: 1.7 },                             // ± 0.6 stat ± 1.6 sys
+    { name: 'H0LiCOW (lensed quasars)', ref: 'Wong et al. 2020', doi: '10.1093/mnras/stz3094', v: 73.3, e: 1.75 },                        // +1.7 −1.8
+    { name: 'TDCOSMO 2025 (lensed quasars)', ref: 'TDCOSMO Collaboration 2025', doi: '10.1051/0004-6361/202555801', v: 71.6, e: 3.6 },    // +3.9 −3.3
+    { name: 'TDCOSMO 2026 (lensed quasars)', ref: 'TDCOSMO Collaboration 2026', doi: '10.48550/arXiv.2610.14781', v: 71.1, e: 2.35 },     // +2.4 −2.3. arXiv doi until it is published
+    { name: 'SN Refsdal (lensed SN)', ref: 'Kelly et al. 2023', doi: '10.1126/science.abh1322', v: 66.6, e: 3.7 },                        // +4.1 −3.3, the two best lens models
+    { name: 'SN H0pe (lensed SN Ia)', ref: 'Pascale et al. 2025', doi: '10.3847/1538-4357/ad9928', v: 75.7, e: 6.8 },                     // +8.1 −5.5 (the preprint had 75.4)
+    { name: 'MCP (megamasers)', ref: 'Pesce et al. 2020', doi: '10.3847/2041-8213/ab75f0', v: 73.9, e: 3.0 },
 ];
 // values that make people pick a side
 const EARLY_VALUES = [67.36, 67.4, 67.66, 67.7, 67.74, 68.52, 69.32, 67.5];
-const LATE_VALUES = [73.04, 73, 73.2, 73.3, 73.5, 73.9, 74.03, 72, 75.4];
+const LATE_VALUES = [73.04, 73, 73.2, 73.3, 73.5, 73.9, 74.03, 72, 75.7];
 function h0Team(v) {
     const is = list => list.some(x => Math.abs(x - v) < 0.005);
     if (Math.abs(v - 70) < 0.005) return 'mid';
@@ -1678,6 +1685,8 @@ const pickM = v => v[0] === 'E' ? H0_EARLY[+v.slice(1)] : v[0] === 'L' ? H0_LATE
 function syncSel(which) {
     const m = pickM($(`#t${which}-sel`).value);
     if (m) { $(`#t${which}-v`).value = m.v; $(`#t${which}-e`).value = m.e; }
+    // the paper behind the numbers. custom values have none
+    $(`#t${which}-ref`).innerHTML = m ? `<a href="https://doi.org/${m.doi}" target="_blank" rel="noopener">${esc(m.ref)}</a>` : '';
 }
 syncSel('a'); syncSel('b');
 
@@ -1724,7 +1733,7 @@ function updateTension() {
 }
 for (const w of ['a', 'b']) {
     $(`#t${w}-sel`).addEventListener('change', () => { syncSel(w); updateTension(); });
-    for (const f of ['v', 'e']) $(`#t${w}-${f}`).addEventListener('input', () => { $(`#t${w}-sel`).value = 'custom'; updateTension(); });
+    for (const f of ['v', 'e']) $(`#t${w}-${f}`).addEventListener('input', () => { $(`#t${w}-sel`).value = 'custom'; syncSel(w); updateTension(); });
 }
 $('#mine').addEventListener('input', () => { userTouched = true; updateTension(); teamRemark(+(+$('#mine').value).toFixed(2)); });
 
